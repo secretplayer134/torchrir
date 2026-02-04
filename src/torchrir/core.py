@@ -109,38 +109,39 @@ def simulate_rir(
     refl = _reflection_coefficients(n_vec, beta)
 
     src_pattern, mic_pattern = split_directivity(directivity)
+    mic_dir = None
+    if mic_pattern != "omni":
+        if mic_ori is None:
+            raise ValueError("mic orientation required for non-omni directivity")
+        mic_dir = orientation_to_unit(mic_ori, dim)
 
     n_src = src_pos.shape[0]
     n_mic = mic_pos.shape[0]
     rir = torch.zeros((n_src, n_mic, nsample), device=device, dtype=dtype)
+    cfg = get_config()
+    fdl = cfg["frac_delay_length"]
+    fdl2 = (fdl - 1) // 2
 
     for s_idx in range(n_src):
-        img = _image_positions(src_pos[s_idx], room_size, n_vec)
-        vec = mic_pos[:, None, :] - img[None, :, :]
-        dist = torch.linalg.norm(vec, dim=-1)
-        dist = torch.clamp(dist, min=1e-6)
-        time = dist / room.c
-        cfg = get_config()
-        fdl = cfg["frac_delay_length"]
-        fdl2 = (fdl - 1) // 2
-        time = time + (fdl2 / room.fs)
-        sample = time * room.fs
-
-        gain = refl[None, :]
+        src_dir = None
         if src_pattern != "omni":
             if src_ori is None:
                 raise ValueError("source orientation required for non-omni directivity")
-            ori = _select_orientation(src_ori, s_idx, n_src, dim)
-            cos_theta = _cos_between(vec, ori)
-            gain = gain * directivity_gain(src_pattern, cos_theta)
-        if mic_pattern != "omni":
-            if mic_ori is None:
-                raise ValueError("mic orientation required for non-omni directivity")
-            mic_dir = orientation_to_unit(mic_ori, dim)
-            cos_theta = _cos_between(-vec, mic_dir)
-            gain = gain * directivity_gain(mic_pattern, cos_theta)
+            src_dir = _select_orientation(src_ori, s_idx, n_src, dim)
 
-        attenuation = gain / dist
+        sample, attenuation = _compute_image_contributions(
+            src_pos[s_idx],
+            mic_pos,
+            room_size,
+            n_vec,
+            refl,
+            room,
+            fdl2,
+            src_pattern=src_pattern,
+            mic_pattern=mic_pattern,
+            src_dir=src_dir,
+            mic_dir=mic_dir,
+        )
         _accumulate_rir(rir[s_idx], sample, attenuation)
 
     if tdiff is not None and tmax is not None and tdiff < tmax:
@@ -334,6 +335,45 @@ def _reflection_coefficients(n_vec: Tensor, beta: Tensor) -> Tensor:
 
     coeff = (beta_hi**n_hi) * (beta_lo**n_lo)
     return torch.prod(coeff, dim=1)
+
+
+def _compute_image_contributions(
+    src: Tensor,
+    mic_pos: Tensor,
+    room_size: Tensor,
+    n_vec: Tensor,
+    refl: Tensor,
+    room: Room,
+    fdl2: int,
+    *,
+    src_pattern: str,
+    mic_pattern: str,
+    src_dir: Optional[Tensor],
+    mic_dir: Optional[Tensor],
+) -> Tuple[Tensor, Tensor]:
+    """Compute sample positions and attenuation for a source and all mics."""
+    img = _image_positions(src, room_size, n_vec)
+    vec = mic_pos[:, None, :] - img[None, :, :]
+    dist = torch.linalg.norm(vec, dim=-1)
+    dist = torch.clamp(dist, min=1e-6)
+    time = dist / room.c
+    time = time + (fdl2 / room.fs)
+    sample = time * room.fs
+
+    gain = refl[None, :]
+    if src_pattern != "omni":
+        if src_dir is None:
+            raise ValueError("source orientation required for non-omni directivity")
+        cos_theta = _cos_between(vec, src_dir)
+        gain = gain * directivity_gain(src_pattern, cos_theta)
+    if mic_pattern != "omni":
+        if mic_dir is None:
+            raise ValueError("mic orientation required for non-omni directivity")
+        cos_theta = _cos_between(-vec, mic_dir)
+        gain = gain * directivity_gain(mic_pattern, cos_theta)
+
+    attenuation = gain / dist
+    return sample, attenuation
 
 
 def _select_orientation(orientation: Tensor, idx: int, count: int, dim: int) -> Tensor:
