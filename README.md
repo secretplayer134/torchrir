@@ -19,6 +19,7 @@ pip install torchrir
 - GPU acceleration for ISM accumulation (CUDA/MPS; MPS disables LUT).
 - Dataset utilities with CMU ARCTIC support and example pipelines.
 - Plotting utilities for static and dynamic scenes.
+- Metadata export helpers for time axis, DOA, and array attributes (JSON-ready).
 - Unified CLI with JSON/YAML config and deterministic flag support.
 
 ## Example Usage
@@ -52,6 +53,7 @@ uv run python examples/cli.py --mode static --config-out outputs/cli.yaml
 uv run python examples/cli.py --config-in outputs/cli.yaml
 ```
 `examples/cli_example.yaml` provides a ready-to-use template.
+Examples also save `*_metadata.json` alongside audio outputs.
 
 ```python
 from torchrir import DynamicConvolver, MicrophoneArray, Room, Source, simulate_rir
@@ -169,6 +171,7 @@ device, dtype = DeviceSpec(device="auto").resolve()
 
 ## References
 - [gpuRIR](https://github.com/DavidDiazGuerra/gpuRIR)
+- [Cross3D](https://github.com/DavidDiazGuerra/Cross3D)
 - [pyroomacoustics](https://github.com/LCAV/pyroomacoustics)
 - [das-generator](https://github.com/ehabets/das-generator)
 - [rir-generator](https://github.com/audiolabs/rir-generator)
@@ -253,4 +256,3 @@ y = DynamicConvolver(mode="trajectory").convolve(signal, rirs)
 - Enhanced acoustics: frequency-dependent absorption and more advanced diffuse tail models.
 - Add microphone and source directivity models similar to gpuRIR/pyroomacoustics.
 - Add regression tests comparing generated RIRs against gpuRIR outputs.
-- Add a feature to export per-scene configuration metadata alongside outputs.

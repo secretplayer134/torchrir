@@ -18,9 +18,11 @@ try:
         Room,
         Source,
         animate_scene_gif,
+        build_metadata,
         get_logger,
         plot_scene_and_save,
         resolve_device,
+        save_metadata_json,
         save_wav,
         setup_logging,
         simulate_dynamic_rir,
@@ -36,9 +38,11 @@ except ModuleNotFoundError:  # allow running without installation
         Room,
         Source,
         animate_scene_gif,
+        build_metadata,
         get_logger,
         plot_scene_and_save,
         resolve_device,
+        save_metadata_json,
         save_wav,
         setup_logging,
         simulate_dynamic_rir,
@@ -178,11 +182,25 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     out_path = args.out_dir / "dynamic_mic_binaural.wav"
     save_wav(out_path, y_dynamic, fs)
+    meta_path = args.out_dir / "dynamic_mic_binaural_metadata.json"
+    metadata = build_metadata(
+        room=room,
+        sources=sources,
+        mics=mics,
+        rirs=rirs,
+        src_traj=src_traj,
+        mic_traj=mic_traj,
+        signal_len=signals.shape[1],
+        source_info=info,
+        extra={"mode": "dynamic_mic"},
+    )
+    save_metadata_json(meta_path, metadata)
 
     logger.info("sources: %s", info)
     logger.info("dynamic RIR shape: %s", tuple(rirs.shape))
     logger.info("output shape: %s", tuple(y_dynamic.shape))
     logger.info("saved: %s", out_path)
+    logger.info("saved: %s", meta_path)
 
 
 if __name__ == "__main__":

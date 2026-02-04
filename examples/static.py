@@ -16,10 +16,12 @@ try:
         MicrophoneArray,
         Room,
         Source,
+        build_metadata,
         convolve_rir,
         get_logger,
         plot_scene_and_save,
         resolve_device,
+        save_metadata_json,
         save_wav,
         setup_logging,
         simulate_rir,
@@ -33,10 +35,12 @@ except ModuleNotFoundError:  # allow running without installation
         MicrophoneArray,
         Room,
         Source,
+        build_metadata,
         convolve_rir,
         get_logger,
         plot_scene_and_save,
         resolve_device,
+        save_metadata_json,
         save_wav,
         setup_logging,
         simulate_rir,
@@ -126,11 +130,25 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     out_path = args.out_dir / "static_binaural.wav"
     save_wav(out_path, y_static, fs)
+    meta_path = args.out_dir / "static_binaural_metadata.json"
+    metadata = build_metadata(
+        room=room,
+        sources=sources,
+        mics=mics,
+        rirs=rirs,
+        src_traj=None,
+        mic_traj=None,
+        signal_len=signals.shape[1],
+        source_info=info,
+        extra={\"mode\": \"static\"},
+    )
+    save_metadata_json(meta_path, metadata)
 
     logger.info("sources: %s", info)
     logger.info("RIR shape: %s", tuple(rirs.shape))
     logger.info("output shape: %s", tuple(y_static.shape))
     logger.info("saved: %s", out_path)
+    logger.info("saved: %s", meta_path)
 
 
 if __name__ == "__main__":

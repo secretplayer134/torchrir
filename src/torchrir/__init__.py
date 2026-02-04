@@ -5,6 +5,7 @@ from .core import simulate_dynamic_rir, simulate_rir
 from .dynamic import DynamicConvolver
 from .logging_utils import LoggingConfig, get_logger, setup_logging
 from .animation import animate_scene_gif
+from .metadata import build_metadata, save_metadata_json
 from .plotting import plot_scene_dynamic, plot_scene_static
 from .plotting_utils import plot_scene_and_save
 from .room import MicrophoneArray, Room, Source
@@ -63,6 +64,7 @@ __all__ = [
     "list_cmu_arctic_speakers",
     "LoggingConfig",
     "animate_scene_gif",
+    "build_metadata",
     "resolve_device",
     "SentenceLike",
     "load_dataset_sources",
@@ -77,6 +79,7 @@ __all__ = [
     "plot_scene_and_save",
     "plot_scene_static",
     "save_wav",
+    "save_metadata_json",
     "Scene",
     "setup_logging",
     "SimulationConfig",
