@@ -12,10 +12,13 @@ import torch
 try:
     from torchrir import (
         DynamicConvolver,
+        LoggingConfig,
         MicrophoneArray,
         Room,
         Source,
+        get_logger,
         resolve_device,
+        setup_logging,
         simulate_dynamic_rir,
         simulate_rir,
     )
@@ -24,10 +27,13 @@ except ModuleNotFoundError:  # allow running without installation
     sys.path.insert(0, str(ROOT / "src"))
     from torchrir import (
         DynamicConvolver,
+        LoggingConfig,
         MicrophoneArray,
         Room,
         Source,
+        get_logger,
         resolve_device,
+        setup_logging,
         simulate_dynamic_rir,
         simulate_rir,
     )
@@ -116,27 +122,31 @@ def main() -> None:
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--gpu", type=str, default="auto", help="cuda/mps/auto")
     parser.add_argument("--dynamic", action="store_true", help="benchmark dynamic trajectory path")
+    parser.add_argument("--log-level", type=str, default="INFO")
     args = parser.parse_args()
+
+    setup_logging(LoggingConfig(level=args.log_level))
+    logger = get_logger("examples.benchmark_device")
 
     if args.dynamic:
         cpu_time = _bench_dynamic(resolve_device("cpu"), repeats=args.repeats)
-        print(f"cpu dynamic avg: {cpu_time * 1000:.2f} ms")
+        logger.info("cpu dynamic avg: %.2f ms", cpu_time * 1000)
     else:
         cpu_time = _bench_once(resolve_device("cpu"), repeats=args.repeats)
-        print(f"cpu avg: {cpu_time * 1000:.2f} ms")
+        logger.info("cpu avg: %.2f ms", cpu_time * 1000)
 
     gpu_device = resolve_device(args.gpu)
     if gpu_device.type == "cpu":
-        print("gpu not available; skipping gpu benchmark")
+        logger.warning("gpu not available; skipping gpu benchmark")
         return
 
     if args.dynamic:
         gpu_time = _bench_dynamic(gpu_device, repeats=args.repeats)
-        print(f"{gpu_device.type} dynamic avg: {gpu_time * 1000:.2f} ms")
+        logger.info("%s dynamic avg: %.2f ms", gpu_device.type, gpu_time * 1000)
     else:
         gpu_time = _bench_once(gpu_device, repeats=args.repeats)
-        print(f"{gpu_device.type} avg: {gpu_time * 1000:.2f} ms")
-    print(f"speedup: {cpu_time / gpu_time:.2f}x")
+        logger.info("%s avg: %.2f ms", gpu_device.type, gpu_time * 1000)
+    logger.info("speedup: %.2fx", cpu_time / gpu_time)
 
 
 if __name__ == "__main__":

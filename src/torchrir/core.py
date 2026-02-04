@@ -8,7 +8,7 @@ from typing import Optional, Tuple
 import torch
 from torch import Tensor
 
-from .config import get_config
+from .config import SimulationConfig, default_config
 from .directivity import directivity_gain, split_directivity
 from .room import MicrophoneArray, Room, Source
 from .utils import (
@@ -35,6 +35,7 @@ def simulate_rir(
     tdiff: Optional[float] = None,
     directivity: str | tuple[str, str] = "omni",
     orientation: Optional[Tensor | tuple[Tensor, Tensor]] = None,
+    config: Optional[SimulationConfig] = None,
     device: Optional[torch.device | str] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> Tensor:
@@ -51,6 +52,7 @@ def simulate_rir(
         tdiff: Optional time to start diffuse tail modeling.
         directivity: Directivity pattern(s) for source and mic.
         orientation: Orientation vectors or angles.
+        config: Optional simulation configuration overrides.
         device: Output device.
         dtype: Output dtype.
 
@@ -118,10 +120,11 @@ def simulate_rir(
     n_src = src_pos.shape[0]
     n_mic = mic_pos.shape[0]
     rir = torch.zeros((n_src, n_mic, nsample), device=device, dtype=dtype)
-    cfg = get_config()
-    fdl = cfg["frac_delay_length"]
+    cfg = config or default_config()
+    cfg.validate()
+    fdl = cfg.frac_delay_length
     fdl2 = (fdl - 1) // 2
-    img_chunk = cfg.get("image_chunk_size", n_vec.shape[0])
+    img_chunk = cfg.image_chunk_size
     if img_chunk <= 0:
         img_chunk = n_vec.shape[0]
 
@@ -152,7 +155,7 @@ def simulate_rir(
             src_dirs=src_dirs,
             mic_dir=mic_dir,
         )
-        _accumulate_rir_batch(rir, sample_chunk, attenuation_chunk)
+        _accumulate_rir_batch(rir, sample_chunk, attenuation_chunk, cfg)
 
     if tdiff is not None and tmax is not None and tdiff < tmax:
         rir = _apply_diffuse_tail(rir, room, beta, tdiff, tmax)
@@ -169,6 +172,7 @@ def simulate_dynamic_rir(
     tmax: Optional[float] = None,
     directivity: str | tuple[str, str] = "omni",
     orientation: Optional[Tensor | tuple[Tensor, Tensor]] = None,
+    config: Optional[SimulationConfig] = None,
     device: Optional[torch.device | str] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> Tensor:
@@ -183,6 +187,7 @@ def simulate_dynamic_rir(
         tmax: Output length in seconds (used if nsample is None).
         directivity: Directivity pattern(s) for source and mic.
         orientation: Orientation vectors or angles.
+        config: Optional simulation configuration overrides.
         device: Output device.
         dtype: Output dtype.
 
@@ -218,6 +223,7 @@ def simulate_dynamic_rir(
             tmax=tmax,
             directivity=directivity,
             orientation=orientation,
+            config=config,
             device=device,
             dtype=dtype,
         )
@@ -453,18 +459,17 @@ def _cos_between(vec: Tensor, orientation: Tensor) -> Tensor:
     return torch.sum(unit * orientation, dim=-1)
 
 
-def _accumulate_rir(rir: Tensor, sample: Tensor, amplitude: Tensor) -> None:
+def _accumulate_rir(
+    rir: Tensor, sample: Tensor, amplitude: Tensor, cfg: SimulationConfig
+) -> None:
     """Accumulate fractional-delay contributions into the RIR tensor."""
     idx0 = torch.floor(sample).to(torch.int64)
     frac = sample - idx0.to(sample.dtype)
 
     n_mic, nsample = rir.shape
-    cfg = get_config()
-    fdl = cfg["frac_delay_length"]
-    lut_gran = cfg["sinc_lut_granularity"]
-    use_lut = cfg["use_lut"]
-    if use_lut and rir.device.type == "mps":
-        use_lut = False
+    fdl = cfg.frac_delay_length
+    lut_gran = cfg.sinc_lut_granularity
+    use_lut = cfg.use_lut and rir.device.type != "mps"
     fdl2 = (fdl - 1) // 2
 
     dtype = amplitude.dtype
@@ -480,7 +485,7 @@ def _accumulate_rir(rir: Tensor, sample: Tensor, amplitude: Tensor) -> None:
     )
     rir_flat = rir.view(-1)
 
-    chunk_size = cfg.get("accumulate_chunk_size", 4096)
+    chunk_size = cfg.accumulate_chunk_size
     n_img = idx0.shape[1]
     for start in range(0, n_img, chunk_size):
         end = min(start + chunk_size, n_img)
@@ -514,13 +519,24 @@ def _accumulate_rir(rir: Tensor, sample: Tensor, amplitude: Tensor) -> None:
         rir_flat.scatter_add_(0, target_flat, values_flat)
 
 
-def _accumulate_rir_batch(rir: Tensor, sample: Tensor, amplitude: Tensor) -> None:
+def _accumulate_rir_batch(
+    rir: Tensor, sample: Tensor, amplitude: Tensor, cfg: SimulationConfig
+) -> None:
     """Accumulate fractional-delay contributions for all sources/mics."""
-    fn = _maybe_compile_accumulate(_accumulate_rir_batch_impl, rir.device, amplitude.dtype)
+    fn = _get_accumulate_fn(cfg, rir.device, amplitude.dtype)
     return fn(rir, sample, amplitude)
 
 
-def _accumulate_rir_batch_impl(rir: Tensor, sample: Tensor, amplitude: Tensor) -> None:
+def _accumulate_rir_batch_impl(
+    rir: Tensor,
+    sample: Tensor,
+    amplitude: Tensor,
+    *,
+    fdl: int,
+    lut_gran: int,
+    use_lut: bool,
+    chunk_size: int,
+) -> None:
     """Implementation for batch accumulation (optionally compiled)."""
     idx0 = torch.floor(sample).to(torch.int64)
     frac = sample - idx0.to(sample.dtype)
@@ -531,12 +547,6 @@ def _accumulate_rir_batch_impl(rir: Tensor, sample: Tensor, amplitude: Tensor) -
     frac = frac.view(n_sm, -1)
     amplitude = amplitude.view(n_sm, -1)
 
-    cfg = get_config()
-    fdl = cfg["frac_delay_length"]
-    lut_gran = cfg["sinc_lut_granularity"]
-    use_lut = cfg["use_lut"]
-    if use_lut and rir.device.type == "mps":
-        use_lut = False
     fdl2 = (fdl - 1) // 2
 
     n = _get_fdl_grid(fdl, device=rir.device, dtype=sample.dtype)
@@ -551,7 +561,6 @@ def _accumulate_rir_batch_impl(rir: Tensor, sample: Tensor, amplitude: Tensor) -
     )
     rir_flat = rir.view(-1)
 
-    chunk_size = cfg.get("accumulate_chunk_size", 4096)
     n_img = idx0.shape[1]
     for start in range(0, n_img, chunk_size):
         end = min(start + chunk_size, n_img)
@@ -589,20 +598,35 @@ _SINC_LUT_CACHE: dict[tuple[int, int, str, torch.dtype], Tensor] = {}
 _FDL_GRID_CACHE: dict[tuple[int, str, torch.dtype], Tensor] = {}
 _FDL_OFFSETS_CACHE: dict[tuple[int, str], Tensor] = {}
 _FDL_WINDOW_CACHE: dict[tuple[int, str, torch.dtype], Tensor] = {}
-_ACCUM_BATCH_COMPILED: dict[tuple[str, torch.dtype], callable] = {}
+_ACCUM_BATCH_COMPILED: dict[tuple[str, torch.dtype, int, int, bool, int], callable] = {}
 
 
-def _maybe_compile_accumulate(fn, device: torch.device, dtype: torch.dtype):
-    """Optionally wrap accumulation with torch.compile on GPU devices."""
-    if device.type not in ("cuda", "mps"):
-        return fn
-    cfg = get_config()
-    if not cfg.get("use_compile", False):
-        return fn
-    key = (str(device), dtype)
+def _get_accumulate_fn(
+    cfg: SimulationConfig, device: torch.device, dtype: torch.dtype
+) -> callable:
+    """Return an accumulation function with config-bound constants."""
+    use_lut = cfg.use_lut and device.type != "mps"
+    fdl = cfg.frac_delay_length
+    lut_gran = cfg.sinc_lut_granularity
+    chunk_size = cfg.accumulate_chunk_size
+
+    def _fn(rir: Tensor, sample: Tensor, amplitude: Tensor) -> None:
+        _accumulate_rir_batch_impl(
+            rir,
+            sample,
+            amplitude,
+            fdl=fdl,
+            lut_gran=lut_gran,
+            use_lut=use_lut,
+            chunk_size=chunk_size,
+        )
+
+    if device.type not in ("cuda", "mps") or not cfg.use_compile:
+        return _fn
+    key = (str(device), dtype, fdl, lut_gran, use_lut, chunk_size)
     compiled = _ACCUM_BATCH_COMPILED.get(key)
     if compiled is None:
-        compiled = torch.compile(fn, dynamic=True)
+        compiled = torch.compile(_fn, dynamic=True)
         _ACCUM_BATCH_COMPILED[key] = compiled
     return compiled
 

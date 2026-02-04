@@ -1,17 +1,9 @@
 """TorchRIR public API."""
 
-from .config import (
-    activate_lut,
-    activate_compile,
-    activate_mixed_precision,
-    get_config,
-    set_accumulate_chunk_size,
-    set_frac_delay_length,
-    set_image_chunk_size,
-    set_sinc_lut_granularity,
-)
+from .config import SimulationConfig, default_config
 from .core import simulate_dynamic_rir, simulate_rir
 from .dynamic import DynamicConvolver
+from .logging_utils import LoggingConfig, get_logger, setup_logging
 from .plotting import plot_scene_dynamic, plot_scene_static
 from .plotting_utils import plot_scene_and_save
 from .room import MicrophoneArray, Room, Source
@@ -47,9 +39,6 @@ __all__ = [
     "convolve_dynamic_rir",
     "convolve_rir",
     "dynamic_convolve",
-    "activate_lut",
-    "activate_compile",
-    "activate_mixed_precision",
     "att2t_SabineEstimation",
     "att2t_sabine_estimation",
     "beta_SabineEstimation",
@@ -61,8 +50,9 @@ __all__ = [
     "estimate_beta_from_t60",
     "estimate_t60_from_beta",
     "fft_convolve",
-    "get_config",
+    "get_logger",
     "list_cmu_arctic_speakers",
+    "LoggingConfig",
     "resolve_device",
     "SentenceLike",
     "load_dataset_sources",
@@ -77,10 +67,9 @@ __all__ = [
     "plot_scene_and_save",
     "plot_scene_static",
     "save_wav",
-    "set_accumulate_chunk_size",
-    "set_frac_delay_length",
-    "set_image_chunk_size",
-    "set_sinc_lut_granularity",
+    "setup_logging",
+    "SimulationConfig",
+    "default_config",
     "simulate_dynamic_rir",
     "simulate_rir",
     "t2n",

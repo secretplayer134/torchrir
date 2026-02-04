@@ -1,19 +1,26 @@
 import pytest
 import torch
 
-from torchrir import MicrophoneArray, Room, Source, simulate_rir
-from torchrir.config import activate_lut, get_config
+from torchrir import MicrophoneArray, Room, SimulationConfig, Source, simulate_rir
 
 
-def _compute(device: str) -> torch.Tensor:
+def _compute(device: str, cfg: SimulationConfig) -> torch.Tensor:
     room = Room.shoebox(size=[4.0, 3.0, 2.5], fs=16000, beta=[0.9] * 6)
     sources = Source.positions([[1.0, 1.2, 1.0]])
     mics = MicrophoneArray.positions([[2.5, 2.0, 1.0]])
-    rir = simulate_rir(room=room, sources=sources, mics=mics, max_order=2, tmax=0.05, device=device)
+    rir = simulate_rir(
+        room=room,
+        sources=sources,
+        mics=mics,
+        max_order=2,
+        tmax=0.05,
+        device=device,
+        config=cfg,
+    )
     return rir.detach().cpu()
 
 
-def _compute_dynamic(device: str) -> torch.Tensor:
+def _compute_dynamic(device: str, cfg: SimulationConfig) -> torch.Tensor:
     room = Room.shoebox(size=[4.0, 3.0, 2.5], fs=16000, beta=[0.9] * 6)
     sources = Source.positions([[1.0, 1.2, 1.0]])
     mics = MicrophoneArray.positions([[2.5, 2.0, 1.0]])
@@ -34,6 +41,7 @@ def _compute_dynamic(device: str) -> torch.Tensor:
         max_order=2,
         tmax=0.05,
         device=device,
+        config=cfg,
     )
     return drir.detach().cpu()
 
@@ -41,50 +49,34 @@ def _compute_dynamic(device: str) -> torch.Tensor:
 def test_rir_cpu_vs_cuda_close():
     if not torch.cuda.is_available():
         pytest.skip("CUDA not available")
-    prev = get_config()["use_lut"]
-    activate_lut(False)
-    try:
-        cpu = _compute("cpu")
-        gpu = _compute("cuda")
-        assert torch.allclose(cpu, gpu, rtol=1e-4, atol=1e-5)
-    finally:
-        activate_lut(prev)
+    cfg = SimulationConfig(use_lut=False)
+    cpu = _compute("cpu", cfg)
+    gpu = _compute("cuda", cfg)
+    assert torch.allclose(cpu, gpu, rtol=1e-4, atol=1e-5)
 
 
 def test_rir_cpu_vs_mps_close():
     if not torch.backends.mps.is_available():
         pytest.skip("MPS not available")
-    prev = get_config()["use_lut"]
-    activate_lut(False)
-    try:
-        cpu = _compute("cpu")
-        mps = _compute("mps")
-        assert torch.allclose(cpu, mps, rtol=1e-3, atol=1e-4)
-    finally:
-        activate_lut(prev)
+    cfg = SimulationConfig(use_lut=False)
+    cpu = _compute("cpu", cfg)
+    mps = _compute("mps", cfg)
+    assert torch.allclose(cpu, mps, rtol=1e-3, atol=1e-4)
 
 
 def test_dynamic_rir_cpu_vs_cuda_close():
     if not torch.cuda.is_available():
         pytest.skip("CUDA not available")
-    prev = get_config()["use_lut"]
-    activate_lut(False)
-    try:
-        cpu = _compute_dynamic("cpu")
-        gpu = _compute_dynamic("cuda")
-        assert torch.allclose(cpu, gpu, rtol=1e-4, atol=1e-5)
-    finally:
-        activate_lut(prev)
+    cfg = SimulationConfig(use_lut=False)
+    cpu = _compute_dynamic("cpu", cfg)
+    gpu = _compute_dynamic("cuda", cfg)
+    assert torch.allclose(cpu, gpu, rtol=1e-4, atol=1e-5)
 
 
 def test_dynamic_rir_cpu_vs_mps_close():
     if not torch.backends.mps.is_available():
         pytest.skip("MPS not available")
-    prev = get_config()["use_lut"]
-    activate_lut(False)
-    try:
-        cpu = _compute_dynamic("cpu")
-        mps = _compute_dynamic("mps")
-        assert torch.allclose(cpu, mps, rtol=1e-3, atol=1e-4)
-    finally:
-        activate_lut(prev)
+    cfg = SimulationConfig(use_lut=False)
+    cpu = _compute_dynamic("cpu", cfg)
+    mps = _compute_dynamic("mps", cfg)
+    assert torch.allclose(cpu, mps, rtol=1e-3, atol=1e-4)

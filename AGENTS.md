@@ -1,17 +1,22 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Core code lives under `src/torchrir/` (main APIs in `core.py`, data models in `room.py`, patterns in `directivity.py`, helpers in `utils.py`).
-- Tests should go under `tests/` when added.
-- If you add data or example audio, store it under `assets/` or `examples/` to keep core logic clean.
+- Core library code lives under `src/torchrir/`:
+  - Simulation: `core.py`, `room.py`, `directivity.py`, `config.py`
+  - Dynamic convolution: `dynamic.py`, `signal.py`
+  - Datasets + utilities: `datasets/` (CMU ARCTIC support + template stub)
+  - Plotting + scene helpers: `plotting.py`, `plotting_utils.py`, `scene_utils.py`
+- Tests live under `tests/` and use `pytest`.
+- Examples live under `examples/` and should import from `torchrir` (no duplicated utilities).
+- Keep large assets out of the repo; use `assets/` only for small static files.
 
 ## Build, Test, and Development Commands
 - This repository uses `uv` for local development and publishing.
-- Suggested commands once packaging is added:
-  - `uv sync` to create/update the local environment
+- Common commands:
+  - `uv sync` to create/update the virtual environment
   - `uv run pytest` to run tests
   - `uv run ruff check .` or `uv run black .` for lint/format
-- Publishing should be done with `uv` so the package is available to all users via `pip install torchrir`.
+  - `uv build` / `uv publish` for releases (must still support `pip install torchrir`)
 
 ## Coding Style & Naming Conventions
 - Prefer Python for core implementation, with PyTorch used for computation.
@@ -19,15 +24,15 @@
 - Suggested naming patterns:
   - RIR generation: `simulate_rir`, `simulate_dynamic_rir`
   - Modules: `core.py`, `room.py`, `directivity.py`, `utils.py`
+- Use `SimulationConfig` for simulation parameters; avoid global config state.
 - If you add formatters/linters (e.g., `black`, `ruff`), document exact versions and run commands here.
 
 ## Testing Guidelines
-- No testing framework is configured yet.
-- When tests are added, use `pytest` with filenames like `test_*.py` under `tests/`.
+- Use `pytest` with filenames like `test_*.py` under `tests/`.
 - Add unit tests for geometry, ISM correctness, and dynamic trajectory handling.
+  - Prefer parity tests across `cpu`, `cuda`, and `mps` where available.
 
 ## Commit & Pull Request Guidelines
-- No Git history is present, so commit conventions are not established.
 - Recommended commit style: short, imperative subject (e.g., `Add ISM core implementation`).
 - Pull requests should include:
   - A concise summary of changes
@@ -37,7 +42,9 @@
 ## Security & Configuration Tips
 - Avoid committing large audio files or datasets; prefer documented download steps.
 - Keep device selection explicit in APIs (e.g., `device="cpu"` or `"cuda"`).
+  - MPS support is expected on Apple Silicon; fallback to CPU where needed.
 
 ## Agent-Specific Instructions
 - Follow the specification section in `README.md` as the source of truth for required features and APIs.
 - Update the specification section in `README.md` when user requirements change.
+- Keep README links in Markdown format.

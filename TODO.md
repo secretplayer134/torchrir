@@ -23,8 +23,8 @@ This TODO list is ordered by priority (higher priority items appear first).
 - [x] Add dataset-agnostic utilities (dataset loading + scene helpers).
 
 ## Configuration & Logging
-- [ ] Replace global config (`config.py`) with explicit config passed into simulation.
-- [ ] Add `LoggingConfig` and standardize log levels across examples and library.
+- [x] Replace global config (`config.py`) with explicit config passed into simulation.
+- [x] Add `LoggingConfig` and standardize log levels across examples and library.
 
 ## Domain Model (stabilize inputs/outputs)
 - [ ] Add `Scene` dataclass to encapsulate room, sources, mics, and optional trajectories.

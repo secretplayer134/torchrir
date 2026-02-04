@@ -2,7 +2,6 @@ from __future__ import annotations
 
 """CMU ARCTIC dataset helpers."""
 
-import sys
 import tarfile
 import urllib.request
 from dataclasses import dataclass
@@ -10,6 +9,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import torch
+import logging
 
 BASE_URL = "http://www.festvox.org/cmu_arctic/packed"
 VALID_SPEAKERS = {
@@ -32,6 +32,8 @@ VALID_SPEAKERS = {
     "slp",
     "slt",
 }
+
+logger = logging.getLogger(__name__)
 
 
 def list_cmu_arctic_speakers() -> List[str]:
@@ -89,15 +91,15 @@ class CmuArcticDataset:
         url = f"{BASE_URL}/{self._archive_name}"
 
         if not archive_path.exists():
-            print(f"Downloading {url}")
+            logger.info("Downloading %s", url)
             _download(url, archive_path)
         if not self._dataset_dir.exists():
-            print(f"Extracting {archive_path}")
+            logger.info("Extracting %s", archive_path)
             try:
                 with tarfile.open(archive_path, "r:bz2") as tar:
                     tar.extractall(self._base_dir)
             except (tarfile.ReadError, EOFError, OSError) as exc:
-                print(f"Extraction failed ({exc}); re-downloading.")
+                logger.warning("Extraction failed (%s); re-downloading.", exc)
                 if archive_path.exists():
                     archive_path.unlink()
                 _download(url, archive_path)
@@ -146,7 +148,7 @@ def _download(url: str, dest: Path, retries: int = 1) -> None:
                 dest.unlink()
             if attempt >= retries:
                 raise
-            print(f"Download failed ({exc}); retrying...")
+            logger.warning("Download failed (%s); retrying...", exc)
 
 
 def _stream_download(url: str, dest: Path) -> None:
@@ -166,15 +168,9 @@ def _stream_download(url: str, dest: Path) -> None:
                     break
                 f.write(chunk)
                 downloaded += len(chunk)
-                if total > 0:
-                    pct = (downloaded / total) * 100
-                    sys.stdout.write(f"\rDownloading {dest.name}: {pct:5.1f}%")
-                    sys.stdout.flush()
     if total > 0 and downloaded != total:
         raise IOError(f"incomplete download: {downloaded} of {total} bytes")
     tmp_path.replace(dest)
-    if total > 0:
-        sys.stdout.write("\n")
 
 
 def _parse_text_line(line: str) -> Tuple[str, str]:

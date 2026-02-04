@@ -12,13 +12,16 @@ import torch
 try:
     from torchrir import (
         CmuArcticDataset,
+        LoggingConfig,
         MicrophoneArray,
         Room,
         Source,
         convolve_rir,
+        get_logger,
         plot_scene_and_save,
         resolve_device,
         save_wav,
+        setup_logging,
         simulate_rir,
     )
 except ModuleNotFoundError:  # allow running without installation
@@ -26,13 +29,16 @@ except ModuleNotFoundError:  # allow running without installation
     sys.path.insert(0, str(ROOT / "src"))
     from torchrir import (
         CmuArcticDataset,
+        LoggingConfig,
         MicrophoneArray,
         Room,
         Source,
         convolve_rir,
+        get_logger,
         plot_scene_and_save,
         resolve_device,
         save_wav,
+        setup_logging,
         simulate_rir,
     )
 
@@ -63,7 +69,11 @@ def main() -> None:
     parser.add_argument("--out-dir", type=Path, default=Path("outputs"))
     parser.add_argument("--plot", action="store_true", help="plot room and trajectories")
     parser.add_argument("--show", action="store_true", help="show plots interactively")
+    parser.add_argument("--log-level", type=str, default="INFO")
     args = parser.parse_args()
+
+    setup_logging(LoggingConfig(level=args.log_level))
+    logger = get_logger("examples.static")
 
     rng = random.Random(args.seed)
     device = resolve_device(args.device)
@@ -100,7 +110,7 @@ def main() -> None:
                 show=args.show,
             )
         except Exception as exc:  # pragma: no cover - optional dependency
-            print(f"Plot skipped: {exc}")
+            logger.warning("Plot skipped: %s", exc)
 
     rirs = simulate_rir(
         room=room,
@@ -117,10 +127,10 @@ def main() -> None:
     out_path = args.out_dir / "static_binaural.wav"
     save_wav(out_path, y_static, fs)
 
-    print("sources:", info)
-    print("RIR shape:", tuple(rirs.shape))
-    print("output shape:", tuple(y_static.shape))
-    print("saved:", out_path)
+    logger.info("sources: %s", info)
+    logger.info("RIR shape: %s", tuple(rirs.shape))
+    logger.info("output shape: %s", tuple(y_static.shape))
+    logger.info("saved: %s", out_path)
 
 
 if __name__ == "__main__":

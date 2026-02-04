@@ -1,7 +1,14 @@
 import torch
 import pytest
 
-from torchrir import Room, Source, MicrophoneArray, get_config, simulate_rir, simulate_dynamic_rir
+from torchrir import (
+    MicrophoneArray,
+    Room,
+    SimulationConfig,
+    Source,
+    simulate_dynamic_rir,
+    simulate_rir,
+)
 
 
 def test_simulate_rir_shape_and_peak():
@@ -22,7 +29,7 @@ def test_simulate_rir_shape_and_peak():
     assert rir.shape == (1, 1, nsample)
     dist = 1.0
     expected = dist / room.c * room.fs
-    fdl = get_config()["frac_delay_length"]
+    fdl = SimulationConfig().frac_delay_length
     expected += (fdl - 1) / 2
     peak = torch.argmax(torch.abs(rir[0, 0])).item()
     assert abs(peak - expected) <= 1.0

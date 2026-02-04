@@ -47,6 +47,15 @@ signals, fs, info = load_dataset_sources(
 ### Dataset template (for future extension)
 `TemplateDataset` provides a minimal stub to implement new datasets later.
 
+### Logging
+```python
+from torchrir import LoggingConfig, get_logger, setup_logging
+
+setup_logging(LoggingConfig(level="INFO"))
+logger = get_logger("examples")
+logger.info("running torchrir example")
+```
+
 ## Device Selection
 - `device="cpu"`: CPU execution
 - `device="cuda"`: NVIDIA GPU (CUDA) if available, otherwise fallback to CPU

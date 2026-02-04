@@ -11,28 +11,34 @@ import torch
 
 try:
     from torchrir import (
-        DynamicConvolver,
         CmuArcticDataset,
+        DynamicConvolver,
+        LoggingConfig,
         MicrophoneArray,
         Room,
         Source,
+        get_logger,
         plot_scene_and_save,
         resolve_device,
         save_wav,
+        setup_logging,
         simulate_dynamic_rir,
     )
 except ModuleNotFoundError:  # allow running without installation
     ROOT = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(ROOT / "src"))
     from torchrir import (
-        DynamicConvolver,
         CmuArcticDataset,
+        DynamicConvolver,
+        LoggingConfig,
         MicrophoneArray,
         Room,
         Source,
+        get_logger,
         plot_scene_and_save,
         resolve_device,
         save_wav,
+        setup_logging,
         simulate_dynamic_rir,
     )
 
@@ -65,7 +71,11 @@ def main() -> None:
     parser.add_argument("--out-dir", type=Path, default=Path("outputs"))
     parser.add_argument("--plot", action="store_true", help="plot room and trajectories")
     parser.add_argument("--show", action="store_true", help="show plots interactively")
+    parser.add_argument("--log-level", type=str, default="INFO")
     args = parser.parse_args()
+
+    setup_logging(LoggingConfig(level=args.log_level))
+    logger = get_logger("examples.dynamic_mic")
 
     rng = random.Random(args.seed)
     device = resolve_device(args.device)
@@ -115,7 +125,7 @@ def main() -> None:
                 show=args.show,
             )
         except Exception as exc:  # pragma: no cover - optional dependency
-            print(f"Plot skipped: {exc}")
+            logger.warning("Plot skipped: %s", exc)
 
     rirs = simulate_dynamic_rir(
         room=room,
@@ -132,10 +142,10 @@ def main() -> None:
     out_path = args.out_dir / "dynamic_mic_binaural.wav"
     save_wav(out_path, y_dynamic, fs)
 
-    print("sources:", info)
-    print("dynamic RIR shape:", tuple(rirs.shape))
-    print("output shape:", tuple(y_dynamic.shape))
-    print("saved:", out_path)
+    logger.info("sources: %s", info)
+    logger.info("dynamic RIR shape: %s", tuple(rirs.shape))
+    logger.info("output shape: %s", tuple(y_dynamic.shape))
+    logger.info("saved: %s", out_path)
 
 
 if __name__ == "__main__":
