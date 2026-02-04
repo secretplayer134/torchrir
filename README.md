@@ -1,6 +1,7 @@
 # TorchRIR
 
 PyTorch-based room impulse response (RIR) simulation toolkit focused on a clean, modern API with GPU support.
+This project has been substantially assisted by AI using Codex.
 
 ## Example Usage
 ```bash
@@ -189,3 +190,9 @@ y = DynamicConvolver(mode="trajectory").convolve(signal, rirs)
 
 ### Device Control
 - `device="cpu"`, `"cuda"`, `"mps"`, or `"auto"`; resolves with fallback to CPU.
+
+## Future Work
+- Ray tracing backend: implement `RayTracingSimulator` with frequency-dependent absorption/scattering.
+- FDTD backend: implement `FDTDSimulator` with configurable grid resolution and boundary conditions.
+- Dataset expansion: add additional dataset integrations beyond CMU ARCTIC (see `TemplateDataset`).
+- Enhanced acoustics: frequency-dependent absorption and more advanced diffuse tail models.
