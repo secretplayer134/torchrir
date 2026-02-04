@@ -39,5 +39,5 @@ This TODO list is ordered by priority (higher priority items appear first).
 - [x] Remove backward-compatibility wrappers; keep direct simulation APIs only.
 
 ## CLI / Recipes
-- [ ] Consolidate examples into a single CLI with `--mode` (static/dynamic_src/dynamic_mic).
+- [x] Consolidate examples into a single CLI with `--mode` (static/dynamic_src/dynamic_mic).
 - [ ] Add deterministic flags, seed control, and config serialization (YAML/JSON).

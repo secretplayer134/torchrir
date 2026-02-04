@@ -10,6 +10,11 @@ uv run python examples/static.py --plot
 # Dynamic RIR demos
 uv run python examples/dynamic_mic.py --plot
 uv run python examples/dynamic_src.py --plot
+
+# Unified CLI
+uv run python examples/cli.py --mode static --plot
+uv run python examples/cli.py --mode dynamic_mic --plot
+uv run python examples/cli.py --mode dynamic_src --plot
 ```
 
 ```python
