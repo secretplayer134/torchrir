@@ -251,3 +251,6 @@ y = DynamicConvolver(mode="trajectory").convolve(signal, rirs)
 - FDTD backend: implement `FDTDSimulator` with configurable grid resolution and boundary conditions.
 - Dataset expansion: add additional dataset integrations beyond CMU ARCTIC (see `TemplateDataset`).
 - Enhanced acoustics: frequency-dependent absorption and more advanced diffuse tail models.
+- Add microphone and source directivity models similar to gpuRIR/pyroomacoustics.
+- Add regression tests comparing generated RIRs against gpuRIR outputs.
+- Add a feature to export per-scene configuration metadata alongside outputs.
