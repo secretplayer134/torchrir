@@ -46,21 +46,28 @@ def plot_scene_dynamic(
     src_traj: Tensor | Sequence,
     mic_traj: Tensor | Sequence,
     step: int = 1,
+    src_pos: Optional[Tensor | Sequence] = None,
+    mic_pos: Optional[Tensor | Sequence] = None,
     ax: Any | None = None,
     title: Optional[str] = None,
     show: bool = False,
 ):
-    """Plot source and mic trajectories within a room."""
+    """Plot source and mic trajectories within a room.
+
+    If trajectories are static, only positions are plotted.
+    """
     plt, ax = _setup_axes(ax, room)
 
     size = _room_size(room, ax)
     _draw_room(ax, size)
 
-    src_traj = _as_trajectory(src_traj, ax)
-    mic_traj = _as_trajectory(mic_traj, ax)
+    src_traj = _as_trajectory(src_traj)
+    mic_traj = _as_trajectory(mic_traj)
+    src_pos_t = _extract_positions(src_pos, ax) if src_pos is not None else src_traj[0]
+    mic_pos_t = _extract_positions(mic_pos, ax) if mic_pos is not None else mic_traj[0]
 
-    _plot_trajectories(ax, src_traj, step=step, label="source path")
-    _plot_trajectories(ax, mic_traj, step=step, label="mic path")
+    _plot_entity(ax, src_traj, src_pos_t, step=step, label="sources", marker="^")
+    _plot_entity(ax, mic_traj, mic_pos_t, step=step, label="mics", marker="o")
 
     if title:
         ax.set_title(title)
@@ -176,18 +183,32 @@ def _extract_positions(entity: Source | MicrophoneArray | Tensor | Sequence, ax:
     return pos
 
 
-def _scatter_positions(ax: Any, positions: Tensor, *, label: str, marker: str) -> None:
+def _scatter_positions(
+    ax: Any,
+    positions: Tensor,
+    *,
+    label: str,
+    marker: str,
+    color: Optional[str] = None,
+) -> None:
     """Scatter-plot positions in 2D or 3D."""
     if positions.numel() == 0:
         return
     dim = positions.shape[1]
     if dim == 2:
-        ax.scatter(positions[:, 0], positions[:, 1], label=label, marker=marker)
+        ax.scatter(positions[:, 0], positions[:, 1], label=label, marker=marker, color=color)
     else:
-        ax.scatter(positions[:, 0], positions[:, 1], positions[:, 2], label=label, marker=marker)
+        ax.scatter(
+            positions[:, 0],
+            positions[:, 1],
+            positions[:, 2],
+            label=label,
+            marker=marker,
+            color=color,
+        )
 
 
-def _as_trajectory(traj: Tensor | Sequence, ax: Any | None) -> Tensor:
+def _as_trajectory(traj: Tensor | Sequence) -> Tensor:
     """Validate and normalize a trajectory tensor."""
     traj = as_tensor(traj)
     if traj.ndim != 3:
@@ -195,16 +216,73 @@ def _as_trajectory(traj: Tensor | Sequence, ax: Any | None) -> Tensor:
     return traj
 
 
-def _plot_trajectories(ax: Any, traj: Tensor, *, step: int, label: str) -> None:
-    """Plot trajectories for each entity."""
+def _plot_entity(
+    ax: Any,
+    traj: Tensor,
+    positions: Tensor,
+    *,
+    step: int,
+    label: str,
+    marker: str,
+) -> None:
+    """Plot trajectories and/or static positions with a unified legend entry."""
     if traj.numel() == 0:
         return
-    dim = traj.shape[2]
-    if dim == 2:
-        for idx in range(traj.shape[1]):
-            xy = traj[::step, idx]
-            ax.plot(xy[:, 0], xy[:, 1], label=f"{label} {idx}")
+    import matplotlib.pyplot as plt
+
+    if positions.shape != traj.shape[1:]:
+        positions = traj[0]
+    moving = _is_moving(traj, positions)
+    colors = plt.rcParams.get("axes.prop_cycle", None)
+    if colors is not None:
+        palette = colors.by_key().get("color", [])
     else:
-        for idx in range(traj.shape[1]):
-            xyz = traj[::step, idx]
-            ax.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], label=f"{label} {idx}")
+        palette = []
+    if not palette:
+        palette = ["C0", "C1", "C2", "C3", "C4", "C5"]
+
+    dim = traj.shape[2]
+    for idx in range(traj.shape[1]):
+        color = palette[idx % len(palette)]
+        lbl = label if idx == 0 else "_nolegend_"
+        if moving:
+            if dim == 2:
+                xy = traj[::step, idx]
+                ax.plot(
+                    xy[:, 0],
+                    xy[:, 1],
+                    label=lbl,
+                    color=color,
+                    marker=marker,
+                    markevery=[0],
+                )
+            else:
+                xyz = traj[::step, idx]
+                ax.plot(
+                    xyz[:, 0],
+                    xyz[:, 1],
+                    xyz[:, 2],
+                    label=lbl,
+                    color=color,
+                    marker=marker,
+                    markevery=[0],
+                )
+        pos = positions[idx : idx + 1]
+        _scatter_positions(ax, pos, label="_nolegend_", marker=marker, color=color)
+    if not moving:
+        # ensure legend marker uses the group label
+        _scatter_positions(
+            ax,
+            positions[:1],
+            label=label,
+            marker=marker,
+            color=palette[0],
+        )
+
+
+def _is_moving(traj: Tensor, positions: Tensor, *, tol: float = 1e-6) -> bool:
+    """Return True if any trajectory deviates from the provided positions."""
+    if traj.numel() == 0:
+        return False
+    pos0 = positions.unsqueeze(0).expand_as(traj)
+    return torch.any(torch.linalg.norm(traj - pos0, dim=-1) > tol).item()

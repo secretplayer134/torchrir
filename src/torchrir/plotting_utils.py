@@ -26,6 +26,8 @@ def plot_scene_and_save(
 ) -> tuple[list[Path], list[Path]]:
     """Plot static and dynamic scenes and save images to disk.
 
+    Dynamic plots show trajectories for moving entities and points for fixed ones.
+
     Args:
         out_dir: Output directory for PNGs.
         room: Room size tensor or sequence.
@@ -85,11 +87,12 @@ def plot_scene_and_save(
                 room=view_room,
                 src_traj=view_src_traj,
                 mic_traj=view_mic_traj,
+                src_pos=view_src,
+                mic_pos=view_mic,
                 step=step,
                 title=f"Room scene ({view_dim}D trajectories)",
                 show=False,
             )
-            _overlay_positions(ax, view_src, view_mic)
             dynamic_path = out_dir / f"{prefix}_dynamic_{view_dim}d.png"
             _save_axes(ax, dynamic_path, show=show)
             dynamic_paths.append(dynamic_path)
@@ -142,32 +145,3 @@ def _save_axes(ax: Any, path: Path, *, show: bool) -> None:
     if show:
         plt.show()
     plt.close(fig)
-
-
-def _overlay_positions(ax: Any, sources: torch.Tensor, mics: torch.Tensor) -> None:
-    """Overlay static source and mic positions on an axis."""
-    if sources.numel() > 0:
-        if sources.shape[1] == 2:
-            ax.scatter(sources[:, 0], sources[:, 1], marker="^", label="sources", color="tab:green")
-        else:
-            ax.scatter(
-                sources[:, 0],
-                sources[:, 1],
-                sources[:, 2],
-                marker="^",
-                label="sources",
-                color="tab:green",
-            )
-    if mics.numel() > 0:
-        if mics.shape[1] == 2:
-            ax.scatter(mics[:, 0], mics[:, 1], marker="o", label="mics", color="tab:orange")
-        else:
-            ax.scatter(
-                mics[:, 0],
-                mics[:, 1],
-                mics[:, 2],
-                marker="o",
-                label="mics",
-                color="tab:orange",
-            )
-    ax.legend(loc="best")
