@@ -3,9 +3,11 @@ from __future__ import annotations
 """Unified CLI for static/dynamic RIR examples."""
 
 import argparse
+import json
 import random
 import sys
 from pathlib import Path
+from typing import Any, Dict
 
 import torch
 
@@ -62,6 +64,48 @@ def _dataset_factory(root: Path, download: bool, speaker: str | None):
     return CmuArcticDataset(root, speaker=spk, download=download)
 
 
+def _load_config(path: Path) -> Dict[str, Any]:
+    if path.suffix.lower() in (".yaml", ".yml"):
+        try:
+            import yaml
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError("PyYAML is required for YAML configs") from exc
+        with path.open("r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+    else:
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError("config must be a mapping")
+    return data
+
+
+def _dump_config(path: Path, data: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.suffix.lower() in (".yaml", ".yml"):
+        try:
+            import yaml
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError("PyYAML is required for YAML configs") from exc
+        with path.open("w", encoding="utf-8") as f:
+            yaml.safe_dump(data, f, sort_keys=False)
+    else:
+        with path.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+
+def _normalize_config_values(config: Dict[str, Any]) -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+    for key, value in config.items():
+        if key in ("dataset_dir", "out_dir") and isinstance(value, str):
+            out[key] = Path(value)
+        elif key == "room" and isinstance(value, (list, tuple)):
+            out[key] = [float(v) for v in value]
+        else:
+            out[key] = value
+    return out
+
+
 def _load_sources(args, rng: random.Random, device: torch.device):
     signals, fs, info = load_dataset_sources(
         dataset_factory=lambda speaker: _dataset_factory(args.dataset_dir, args.download, speaker),
@@ -89,6 +133,64 @@ def _plot_scene(args, room, sources, mics, src_traj=None, mic_traj=None, prefix=
     except Exception as exc:  # pragma: no cover - optional dependency
         logger = get_logger("examples.cli")
         logger.warning("Plot skipped: %s", exc)
+
+
+def _apply_determinism(seed: int, enable: bool, logger) -> None:
+    torch.manual_seed(seed)
+    if not enable:
+        return
+    try:
+        torch.use_deterministic_algorithms(True)
+    except Exception as exc:  # pragma: no cover - depends on backend
+        logger.warning("Deterministic algorithms not fully supported: %s", exc)
+    if hasattr(torch.backends, "cudnn"):
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+def _serialize_args(args) -> Dict[str, Any]:
+    return {
+        "mode": args.mode,
+        "dataset_dir": str(args.dataset_dir),
+        "download": args.download,
+        "num_sources": args.num_sources,
+        "duration": args.duration,
+        "seed": args.seed,
+        "deterministic": args.deterministic,
+        "room": list(args.room),
+        "steps": args.steps,
+        "order": args.order,
+        "tmax": args.tmax,
+        "device": args.device,
+        "out_dir": str(args.out_dir),
+        "plot": args.plot,
+        "show": args.show,
+        "log_level": args.log_level,
+    }
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Unified CMU ARCTIC RIR examples")
+    parser.add_argument("--mode", choices=("static", "dynamic_src", "dynamic_mic"), default="static")
+    parser.add_argument("--dataset-dir", type=Path, default=Path("datasets/cmu_arctic"))
+    parser.add_argument("--download", action="store_true", default=True)
+    parser.add_argument("--no-download", action="store_false", dest="download")
+    parser.add_argument("--num-sources", type=int, default=2)
+    parser.add_argument("--duration", type=float, default=10.0)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--deterministic", action="store_true", help="enable deterministic kernels")
+    parser.add_argument("--room", type=float, nargs="+", default=[6.0, 4.0, 3.0])
+    parser.add_argument("--steps", type=int, default=16)
+    parser.add_argument("--order", type=int, default=8)
+    parser.add_argument("--tmax", type=float, default=0.4)
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--out-dir", type=Path, default=Path("outputs"))
+    parser.add_argument("--plot", action="store_true", help="plot room and trajectories")
+    parser.add_argument("--show", action="store_true", help="show plots interactively")
+    parser.add_argument("--log-level", type=str, default="INFO")
+    parser.add_argument("--config-in", type=Path, help="load config from JSON/YAML")
+    parser.add_argument("--config-out", type=Path, help="write config to JSON/YAML")
+    return parser
 
 
 def _run_static(args, rng: random.Random, logger):
@@ -211,27 +313,21 @@ def _run_dynamic_mic(args, rng: random.Random, logger):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Unified CMU ARCTIC RIR examples")
-    parser.add_argument("--mode", choices=("static", "dynamic_src", "dynamic_mic"), default="static")
-    parser.add_argument("--dataset-dir", type=Path, default=Path("datasets/cmu_arctic"))
-    parser.add_argument("--download", action="store_true", default=True)
-    parser.add_argument("--no-download", action="store_false", dest="download")
-    parser.add_argument("--num-sources", type=int, default=2)
-    parser.add_argument("--duration", type=float, default=10.0)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--room", type=float, nargs="+", default=[6.0, 4.0, 3.0])
-    parser.add_argument("--steps", type=int, default=16)
-    parser.add_argument("--order", type=int, default=8)
-    parser.add_argument("--tmax", type=float, default=0.4)
-    parser.add_argument("--device", type=str, default="cpu")
-    parser.add_argument("--out-dir", type=Path, default=Path("outputs"))
-    parser.add_argument("--plot", action="store_true", help="plot room and trajectories")
-    parser.add_argument("--show", action="store_true", help="show plots interactively")
-    parser.add_argument("--log-level", type=str, default="INFO")
+    parser = _build_parser()
+    pre_args, _ = parser.parse_known_args()
+    if pre_args.config_in is not None:
+        config = _load_config(pre_args.config_in)
+        defaults = _normalize_config_values(config)
+        parser.set_defaults(**defaults)
     args = parser.parse_args()
 
     setup_logging(LoggingConfig(level=args.log_level))
     logger = get_logger("examples.cli")
+    _apply_determinism(args.seed, args.deterministic, logger)
+
+    if args.config_out is not None:
+        _dump_config(args.config_out, _serialize_args(args))
+        logger.info("wrote config: %s", args.config_out)
     rng = random.Random(args.seed)
 
     if args.mode == "static":

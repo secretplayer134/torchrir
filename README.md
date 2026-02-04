@@ -15,7 +15,18 @@ uv run python examples/dynamic_src.py --plot
 uv run python examples/cli.py --mode static --plot
 uv run python examples/cli.py --mode dynamic_mic --plot
 uv run python examples/cli.py --mode dynamic_src --plot
+
+# Config + deterministic
+uv run python examples/cli.py --mode static --deterministic --seed 123 --config-out outputs/cli.json
+uv run python examples/cli.py --config-in outputs/cli.json
 ```
+YAML configs are supported when `PyYAML` is installed.
+```bash
+# YAML config
+uv run python examples/cli.py --mode static --config-out outputs/cli.yaml
+uv run python examples/cli.py --config-in outputs/cli.yaml
+```
+`examples/cli_example.yaml` provides a ready-to-use template.
 
 ```python
 from torchrir import DynamicConvolver

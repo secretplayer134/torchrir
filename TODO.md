@@ -40,4 +40,4 @@ This TODO list is ordered by priority (higher priority items appear first).
 
 ## CLI / Recipes
 - [x] Consolidate examples into a single CLI with `--mode` (static/dynamic_src/dynamic_mic).
-- [ ] Add deterministic flags, seed control, and config serialization (YAML/JSON).
+- [x] Add deterministic flags, seed control, and config serialization (YAML/JSON).
