@@ -38,7 +38,20 @@ def build_metadata(
     source_info: Optional[Any] = None,
     extra: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Build JSON-serializable metadata for a simulation output."""
+    """Build JSON-serializable metadata for a simulation output.
+
+    Example:
+        >>> metadata = build_metadata(
+        ...     room=room,
+        ...     sources=sources,
+        ...     mics=mics,
+        ...     rirs=rirs,
+        ...     src_traj=src_traj,
+        ...     mic_traj=mic_traj,
+        ...     signal_len=signal.shape[-1],
+        ... )
+        >>> save_metadata_json(Path(\"outputs/scene_metadata.json\"), metadata)
+    """
     nsample = int(rirs.shape[-1])
     fs = float(room.fs)
     time_axis = {
@@ -121,7 +134,11 @@ def build_metadata(
 
 
 def save_metadata_json(path: Path, metadata: Dict[str, Any]) -> None:
-    """Save metadata as JSON to the given path."""
+    """Save metadata as JSON to the given path.
+
+    Example:
+        >>> save_metadata_json(Path(\"outputs/scene_metadata.json\"), metadata)
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2)

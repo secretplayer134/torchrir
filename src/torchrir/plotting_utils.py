@@ -43,6 +43,17 @@ def plot_scene_and_save(
 
     Returns:
         Tuple of (static_paths, dynamic_paths).
+
+    Example:
+        >>> plot_scene_and_save(
+        ...     out_dir=Path("outputs"),
+        ...     room=[6.0, 4.0, 3.0],
+        ...     sources=[[1.0, 2.0, 1.5]],
+        ...     mics=[[2.0, 2.0, 1.5]],
+        ...     src_traj=src_traj,
+        ...     mic_traj=mic_traj,
+        ...     prefix="scene",
+        ... )
     """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

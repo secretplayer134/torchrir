@@ -58,6 +58,18 @@ def simulate_rir(
 
     Returns:
         Tensor of shape (n_src, n_mic, nsample).
+
+    Example:
+        >>> room = Room.shoebox(size=[6.0, 4.0, 3.0], fs=16000, beta=[0.9] * 6)
+        >>> sources = Source.positions([[1.0, 2.0, 1.5]])
+        >>> mics = MicrophoneArray.positions([[2.0, 2.0, 1.5]])
+        >>> rir = simulate_rir(
+        ...     room=room,
+        ...     sources=sources,
+        ...     mics=mics,
+        ...     max_order=6,
+        ...     tmax=0.3,
+        ... )
     """
     cfg = config or default_config()
     cfg.validate()
@@ -208,6 +220,23 @@ def simulate_dynamic_rir(
 
     Returns:
         Tensor of shape (T, n_src, n_mic, nsample).
+
+    Example:
+        >>> room = Room.shoebox(size=[6.0, 4.0, 3.0], fs=16000, beta=[0.9] * 6)
+        >>> src_traj = torch.stack(
+        ...     [linear_trajectory(torch.tensor([1.0, 2.0, 1.5]),
+        ...                        torch.tensor([4.0, 2.0, 1.5]), 8)],
+        ...     dim=1,
+        ... )
+        >>> mic_pos = torch.tensor([[2.0, 2.0, 1.5]])
+        >>> mic_traj = mic_pos.unsqueeze(0).repeat(8, 1, 1)
+        >>> rirs = simulate_dynamic_rir(
+        ...     room=room,
+        ...     src_traj=src_traj,
+        ...     mic_traj=mic_traj,
+        ...     max_order=4,
+        ...     tmax=0.3,
+        ... )
     """
     cfg = config or default_config()
     cfg.validate()

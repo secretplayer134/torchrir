@@ -17,7 +17,12 @@ from .signal import _ensure_dynamic_rirs, _ensure_signal
 
 @dataclass(frozen=True)
 class DynamicConvolver:
-    """Convolver for time-varying RIRs."""
+    """Convolver for time-varying RIRs.
+
+    Example:
+        >>> convolver = DynamicConvolver(mode="trajectory")
+        >>> y = convolver.convolve(signal, rirs)
+    """
 
     mode: str = "trajectory"
     hop: Optional[int] = None
@@ -28,7 +33,11 @@ class DynamicConvolver:
         return self.convolve(signal, rirs)
 
     def convolve(self, signal: Tensor, rirs: Tensor) -> Tensor:
-        """Convolve signals with time-varying RIRs."""
+        """Convolve signals with time-varying RIRs.
+
+        Example:
+            >>> y = DynamicConvolver(mode="hop", hop=1024).convolve(signal, rirs)
+        """
         if self.mode not in ("trajectory", "hop"):
             raise ValueError("mode must be 'trajectory' or 'hop'")
         if self.mode == "hop":

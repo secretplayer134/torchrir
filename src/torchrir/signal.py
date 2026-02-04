@@ -21,6 +21,9 @@ def fft_convolve(signal: Tensor, rir: Tensor) -> Tensor:
 
     Returns:
         1D tensor of length len(signal) + len(rir) - 1.
+
+    Example:
+        >>> y = fft_convolve(signal, rir)
     """
     if signal.ndim != 1 or rir.ndim != 1:
         raise ValueError("fft_convolve expects 1D tensors")
@@ -41,6 +44,9 @@ def convolve_rir(signal: Tensor, rirs: Tensor) -> Tensor:
 
     Returns:
         (n_mic, n_samples + rir_len - 1) tensor or 1D for single mic.
+
+    Example:
+        >>> y = convolve_rir(signal, rirs)
     """
     signal = _ensure_signal(signal)
     rirs = _ensure_static_rirs(rirs)
