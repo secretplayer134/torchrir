@@ -1,3 +1,5 @@
+"""Dataset helpers for torchrir."""
+
 from .cmu_arctic import (
     CmuArcticDataset,
     CmuArcticSentence,

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+"""Higher-level plotting utilities used by examples."""
+
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional, Sequence
 
 import torch
 
@@ -11,17 +13,35 @@ from .plotting import plot_scene_dynamic, plot_scene_static
 def plot_scene_and_save(
     *,
     out_dir: Path,
-    room,
-    sources,
-    mics,
-    src_traj=None,
-    mic_traj=None,
+    room: Sequence[float] | torch.Tensor,
+    sources: object | torch.Tensor | Sequence,
+    mics: object | torch.Tensor | Sequence,
+    src_traj: Optional[torch.Tensor | Sequence] = None,
+    mic_traj: Optional[torch.Tensor | Sequence] = None,
     prefix: str = "scene",
     step: int = 1,
     show: bool = False,
     plot_2d: bool = True,
     plot_3d: bool = True,
 ) -> tuple[list[Path], list[Path]]:
+    """Plot static and dynamic scenes and save images to disk.
+
+    Args:
+        out_dir: Output directory for PNGs.
+        room: Room size tensor or sequence.
+        sources: Source positions or Source-like object.
+        mics: Microphone positions or MicrophoneArray-like object.
+        src_traj: Optional source trajectory (T, n_src, dim).
+        mic_traj: Optional mic trajectory (T, n_mic, dim).
+        prefix: Filename prefix for saved images.
+        step: Subsampling step for trajectories.
+        show: Whether to show figures interactively.
+        plot_2d: Save 2D projections.
+        plot_3d: Save 3D projections (only if dim == 3).
+
+    Returns:
+        Tuple of (static_paths, dynamic_paths).
+    """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -77,13 +97,15 @@ def plot_scene_and_save(
     return static_paths, dynamic_paths
 
 
-def _to_cpu(value):
+def _to_cpu(value: Any) -> torch.Tensor:
+    """Move a value to CPU as a tensor."""
     if torch.is_tensor(value):
         return value.detach().cpu()
     return torch.as_tensor(value).detach().cpu()
 
 
 def _positions_to_cpu(entity: torch.Tensor | object) -> torch.Tensor:
+    """Extract positions from an entity and move to CPU."""
     pos = getattr(entity, "positions", entity)
     pos = _to_cpu(pos)
     if pos.ndim == 1:
@@ -91,13 +113,17 @@ def _positions_to_cpu(entity: torch.Tensor | object) -> torch.Tensor:
     return pos
 
 
-def _traj_steps(src_traj, mic_traj) -> int:
+def _traj_steps(src_traj: Optional[torch.Tensor | Sequence], mic_traj: Optional[torch.Tensor | Sequence]) -> int:
+    """Infer the number of trajectory steps."""
     if src_traj is not None:
         return int(_to_cpu(src_traj).shape[0])
     return int(_to_cpu(mic_traj).shape[0])
 
 
-def _trajectory_to_cpu(traj, fallback_pos: torch.Tensor, steps: int) -> torch.Tensor:
+def _trajectory_to_cpu(
+    traj: Optional[torch.Tensor | Sequence], fallback_pos: torch.Tensor, steps: int
+) -> torch.Tensor:
+    """Normalize trajectory to CPU tensor with shape (T, N, dim)."""
     if traj is None:
         return fallback_pos.unsqueeze(0).repeat(steps, 1, 1)
     traj = _to_cpu(traj)
@@ -106,7 +132,8 @@ def _trajectory_to_cpu(traj, fallback_pos: torch.Tensor, steps: int) -> torch.Te
     return traj
 
 
-def _save_axes(ax, path: Path, *, show: bool) -> None:
+def _save_axes(ax: Any, path: Path, *, show: bool) -> None:
+    """Save a matplotlib axis to disk."""
     import matplotlib.pyplot as plt
 
     fig = ax.figure
@@ -117,7 +144,8 @@ def _save_axes(ax, path: Path, *, show: bool) -> None:
     plt.close(fig)
 
 
-def _overlay_positions(ax, sources: torch.Tensor, mics: torch.Tensor) -> None:
+def _overlay_positions(ax: Any, sources: torch.Tensor, mics: torch.Tensor) -> None:
+    """Overlay static source and mic positions on an axis."""
     if sources.numel() > 0:
         if sources.shape[1] == 2:
             ax.scatter(sources[:, 0], sources[:, 1], marker="^", label="sources", color="tab:green")

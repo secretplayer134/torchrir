@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Core RIR simulation functions (static and dynamic)."""
+
 import math
 from typing import Optional, Tuple
 
@@ -35,6 +37,25 @@ def simulate_rir(
     device: Optional[torch.device | str] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> Tensor:
+    """Simulate a static RIR using the image source method.
+
+    Args:
+        room: Room configuration (geometry, fs, reflection coefficients).
+        sources: Source positions or a Source object.
+        mics: Microphone positions or a MicrophoneArray object.
+        max_order: Maximum reflection order.
+        nb_img: Optional per-dimension image counts (overrides max_order).
+        nsample: Output length in samples.
+        tmax: Output length in seconds (used if nsample is None).
+        tdiff: Optional time to start diffuse tail modeling.
+        directivity: Directivity pattern(s) for source and mic.
+        orientation: Orientation vectors or angles.
+        device: Output device.
+        dtype: Output dtype.
+
+    Returns:
+        Tensor of shape (n_src, n_mic, nsample).
+    """
     if not isinstance(room, Room):
         raise TypeError("room must be a Room instance")
     if nsample is None and tmax is None:
@@ -136,6 +157,23 @@ def simulate_dynamic_rir(
     device: Optional[torch.device | str] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> Tensor:
+    """Simulate time-varying RIRs for source/mic trajectories.
+
+    Args:
+        room: Room configuration.
+        src_traj: Source trajectory (T, n_src, dim).
+        mic_traj: Microphone trajectory (T, n_mic, dim).
+        max_order: Maximum reflection order.
+        nsample: Output length in samples.
+        tmax: Output length in seconds (used if nsample is None).
+        directivity: Directivity pattern(s) for source and mic.
+        orientation: Orientation vectors or angles.
+        device: Output device.
+        dtype: Output dtype.
+
+    Returns:
+        Tensor of shape (T, n_src, n_mic, nsample).
+    """
     src_traj = as_tensor(src_traj, device=device, dtype=dtype)
     mic_traj = as_tensor(mic_traj, device=device, dtype=dtype)
 
@@ -170,13 +208,18 @@ def simulate_dynamic_rir(
 
 
 def _prepare_entities(
-    entities,
-    orientation,
+    entities: Source | MicrophoneArray | Tensor,
+    orientation: Optional[Tensor | tuple[Tensor, Tensor]],
     *,
     which: str,
     device: Optional[torch.device | str],
     dtype: Optional[torch.dtype],
 ) -> Tuple[Tensor, Optional[Tensor]]:
+    """Extract positions and orientations from entities or raw tensors.
+
+    Returns:
+        Tuple of (positions, orientation).
+    """
     if isinstance(entities, (Source, MicrophoneArray)):
         pos = entities.positions
         ori = entities.orientation
@@ -199,6 +242,11 @@ def _prepare_entities(
 def _resolve_beta(
     room: Room, room_size: Tensor, *, device: torch.device, dtype: torch.dtype
 ) -> Tensor:
+    """Resolve reflection coefficients from beta/t60/defaults.
+
+    Returns:
+        Tensor of reflection coefficients per wall.
+    """
     if room.beta is not None:
         return as_tensor(room.beta, device=device, dtype=dtype)
     if room.t60 is not None:
@@ -209,6 +257,11 @@ def _resolve_beta(
 
 
 def _validate_beta(beta: Tensor, dim: int) -> Tensor:
+    """Validate beta size against room dimension.
+
+    Returns:
+        The validated beta tensor.
+    """
     expected = 4 if dim == 2 else 6
     if beta.numel() != expected:
         raise ValueError(f"beta must have {expected} elements for {dim}D")
@@ -222,6 +275,11 @@ def _image_source_indices(
     device: torch.device,
     nb_img: Optional[Tensor | Tuple[int, ...]] = None,
 ) -> Tensor:
+    """Generate image source index vectors up to the given order.
+
+    Returns:
+        Tensor of shape (n_images, dim).
+    """
     if nb_img is not None:
         nb = as_tensor(nb_img, device=device, dtype=torch.int64)
         if nb.numel() != dim:
@@ -237,6 +295,11 @@ def _image_source_indices(
 
 
 def _image_positions(src: Tensor, room_size: Tensor, n_vec: Tensor) -> Tensor:
+    """Compute image source positions for a given source.
+
+    Returns:
+        Tensor of image positions (n_images, dim).
+    """
     n_vec_f = n_vec.to(dtype=src.dtype)
     sign = torch.where((n_vec % 2) == 0, 1.0, -1.0).to(dtype=src.dtype)
     n = torch.floor_divide(n_vec + 1, 2).to(dtype=src.dtype)
@@ -244,6 +307,11 @@ def _image_positions(src: Tensor, room_size: Tensor, n_vec: Tensor) -> Tensor:
 
 
 def _reflection_coefficients(n_vec: Tensor, beta: Tensor) -> Tensor:
+    """Compute reflection coefficients for each image source.
+
+    Returns:
+        Tensor of shape (n_images,) with per-image gains.
+    """
     dim = n_vec.shape[1]
     beta = beta.view(dim, 2)
     beta_lo = beta[:, 0]
@@ -262,6 +330,7 @@ def _reflection_coefficients(n_vec: Tensor, beta: Tensor) -> Tensor:
 
 
 def _select_orientation(orientation: Tensor, idx: int, count: int, dim: int) -> Tensor:
+    """Pick the correct orientation vector for a given entity index."""
     if orientation.ndim == 0:
         return orientation_to_unit(orientation, dim)
     if orientation.ndim == 1:
@@ -272,12 +341,14 @@ def _select_orientation(orientation: Tensor, idx: int, count: int, dim: int) -> 
 
 
 def _cos_between(vec: Tensor, orientation: Tensor) -> Tensor:
+    """Compute cosine between direction vectors and orientation."""
     orientation = normalize_orientation(orientation)
     unit = vec / torch.linalg.norm(vec, dim=-1, keepdim=True)
     return torch.sum(unit * orientation, dim=-1)
 
 
 def _accumulate_rir(rir: Tensor, sample: Tensor, amplitude: Tensor) -> None:
+    """Accumulate fractional-delay contributions into the RIR tensor."""
     idx0 = torch.floor(sample).to(torch.int64)
     frac = sample - idx0.to(sample.dtype)
 
@@ -326,6 +397,7 @@ def _accumulate_rir(rir: Tensor, sample: Tensor, amplitude: Tensor) -> None:
 
 
 def _get_sinc_lut(fdl: int, lut_gran: int, *, device: torch.device, dtype: torch.dtype) -> Tensor:
+    """Create a sinc lookup table for fractional delays."""
     fdl2 = (fdl - 1) // 2
     lut_size = (fdl + 1) * lut_gran + 1
     n = torch.linspace(-fdl2 - 1, fdl2 + 1, lut_size, device=device, dtype=dtype)
@@ -333,6 +405,11 @@ def _get_sinc_lut(fdl: int, lut_gran: int, *, device: torch.device, dtype: torch
 
 
 def _apply_diffuse_tail(rir: Tensor, room: Room, beta: Tensor, tdiff: float, tmax: float) -> Tensor:
+    """Apply a diffuse reverberation tail after tdiff.
+
+    Returns:
+        RIR tensor with diffuse tail applied.
+    """
     nsample = rir.shape[-1]
     tdiff_idx = min(nsample - 1, int(math.floor(tdiff * room.fs)))
     if tdiff_idx <= 0:

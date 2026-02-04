@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Example: fixed sources with a moving binaural microphone."""
+
 import argparse
 import random
 import sys
@@ -43,6 +45,7 @@ from cmu_arctic_scene_utils import (
 
 
 def main() -> None:
+    """Run the dynamic-mic CMU ARCTIC simulation."""
     parser = argparse.ArgumentParser(description="Dynamic RIR: fixed sources, moving binaural mic")
     parser.add_argument("--dataset-dir", type=Path, default=Path("datasets/cmu_arctic"))
     parser.add_argument("--download", action="store_true", default=True)

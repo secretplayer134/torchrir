@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Optional
+"""Directivity pattern utilities."""
 
 import torch
 from torch import Tensor
 
 
 def directivity_gain(pattern: str, cos_theta: Tensor) -> Tensor:
+    """Compute directivity gain for a pattern given cos(theta)."""
     pattern = pattern.lower()
     if pattern in ("omni", "omnidirectional"):
         return torch.ones_like(cos_theta)
@@ -24,6 +25,7 @@ def directivity_gain(pattern: str, cos_theta: Tensor) -> Tensor:
 
 
 def split_directivity(directivity: str | tuple[str, str]) -> tuple[str, str]:
+    """Normalize directivity specification into (source, mic)."""
     if isinstance(directivity, (list, tuple)):
         if len(directivity) != 2:
             raise ValueError("directivity tuple must have length 2")

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+"""Room, source, and microphone geometry models."""
+
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Sequence
 
 import torch
 from torch import Tensor
@@ -11,6 +13,8 @@ from .utils import as_tensor, ensure_dim
 
 @dataclass(frozen=True)
 class Room:
+    """Room geometry and acoustic parameters."""
+
     size: Tensor
     fs: float
     c: float = 343.0
@@ -18,6 +22,7 @@ class Room:
     t60: Optional[float] = None
 
     def __post_init__(self) -> None:
+        """Validate room size and reflection parameters."""
         size = ensure_dim(self.size)
         object.__setattr__(self, "size", size)
         if self.beta is not None and self.t60 is not None:
@@ -25,15 +30,16 @@ class Room:
 
     @staticmethod
     def shoebox(
-        size,
+        size: Sequence[float] | Tensor,
         *,
         fs: float,
         c: float = 343.0,
-        beta=None,
+        beta: Optional[Sequence[float] | Tensor] = None,
         t60: Optional[float] = None,
         device: Optional[torch.device | str] = None,
         dtype: Optional[torch.dtype] = None,
     ) -> "Room":
+        """Create a rectangular (shoebox) room."""
         size_t = as_tensor(size, device=device, dtype=dtype)
         size_t = ensure_dim(size_t)
         beta_t = None
@@ -44,18 +50,20 @@ class Room:
 
 class Source:
     def __init__(self, positions: Tensor, orientation: Optional[Tensor] = None) -> None:
+        """Create a source container with positions and optional orientation."""
         self.positions = positions
         self.orientation = orientation
 
     @classmethod
     def positions(
         cls,
-        positions,
+        positions: Sequence[Sequence[float]] | Tensor,
         *,
-        orientation=None,
+        orientation: Optional[Sequence[float] | Tensor] = None,
         device: Optional[torch.device | str] = None,
         dtype: Optional[torch.dtype] = None,
     ) -> "Source":
+        """Construct a Source from positions."""
         return cls.from_positions(
             positions, orientation=orientation, device=device, dtype=dtype
         )
@@ -63,12 +71,13 @@ class Source:
     @classmethod
     def from_positions(
         cls,
-        positions,
+        positions: Sequence[Sequence[float]] | Tensor,
         *,
-        orientation=None,
+        orientation: Optional[Sequence[float] | Tensor] = None,
         device: Optional[torch.device | str] = None,
         dtype: Optional[torch.dtype] = None,
     ) -> "Source":
+        """Convert positions/orientation to tensors and build a Source."""
         pos = as_tensor(positions, device=device, dtype=dtype)
         ori = None
         if orientation is not None:
@@ -78,18 +87,20 @@ class Source:
 
 class MicrophoneArray:
     def __init__(self, positions: Tensor, orientation: Optional[Tensor] = None) -> None:
+        """Create a microphone array container."""
         self.positions = positions
         self.orientation = orientation
 
     @classmethod
     def positions(
         cls,
-        positions,
+        positions: Sequence[Sequence[float]] | Tensor,
         *,
-        orientation=None,
+        orientation: Optional[Sequence[float] | Tensor] = None,
         device: Optional[torch.device | str] = None,
         dtype: Optional[torch.dtype] = None,
     ) -> "MicrophoneArray":
+        """Construct a MicrophoneArray from positions."""
         return cls.from_positions(
             positions, orientation=orientation, device=device, dtype=dtype
         )
@@ -97,12 +108,13 @@ class MicrophoneArray:
     @classmethod
     def from_positions(
         cls,
-        positions,
+        positions: Sequence[Sequence[float]] | Tensor,
         *,
-        orientation=None,
+        orientation: Optional[Sequence[float] | Tensor] = None,
         device: Optional[torch.device | str] = None,
         dtype: Optional[torch.dtype] = None,
     ) -> "MicrophoneArray":
+        """Convert positions/orientation to tensors and build a MicrophoneArray."""
         pos = as_tensor(positions, device=device, dtype=dtype)
         ori = None
         if orientation is not None:

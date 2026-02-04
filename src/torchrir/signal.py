@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Signal convolution utilities."""
+
 import math
 
 import torch
@@ -7,6 +9,15 @@ from torch import Tensor
 
 
 def fft_convolve(signal: Tensor, rir: Tensor) -> Tensor:
+    """Convolve a 1D signal with a 1D RIR using FFT.
+
+    Args:
+        signal: 1D signal tensor.
+        rir: 1D impulse response.
+
+    Returns:
+        1D tensor of length len(signal) + len(rir) - 1.
+    """
     if signal.ndim != 1 or rir.ndim != 1:
         raise ValueError("fft_convolve expects 1D tensors")
     n = signal.numel() + rir.numel() - 1
@@ -18,6 +29,15 @@ def fft_convolve(signal: Tensor, rir: Tensor) -> Tensor:
 
 
 def convolve_rir(signal: Tensor, rirs: Tensor) -> Tensor:
+    """Convolve signals with static RIRs (supports multi-source/mic).
+
+    Args:
+        signal: (n_src, n_samples) or (n_samples,) tensor.
+        rirs: (n_src, n_mic, rir_len) or compatible shape.
+
+    Returns:
+        (n_mic, n_samples + rir_len - 1) tensor or 1D for single mic.
+    """
     signal = _ensure_signal(signal)
     rirs = _ensure_static_rirs(rirs)
     n_src, n_mic, rir_len = rirs.shape
@@ -45,6 +65,18 @@ def convolve_dynamic_rir(
     timestamps: Tensor | None = None,
     fs: float | None = None,
 ) -> Tensor:
+    """Convolve signals with time-varying RIRs using hop or trajectory mode.
+
+    Args:
+        signal: (n_src, n_samples) or (n_samples,) tensor.
+        rirs: (T, n_src, n_mic, rir_len) or compatible shape.
+        hop: Fixed hop size for block convolution (legacy mode).
+        timestamps: Optional time stamps (seconds) for each RIR step.
+        fs: Sample rate required when timestamps are provided.
+
+    Returns:
+        (n_mic, n_samples + rir_len - 1) tensor or 1D for single mic.
+    """
     if hop is not None and hop <= 0:
         raise ValueError("hop must be positive")
     if hop is not None and timestamps is not None:
@@ -73,10 +105,12 @@ def dynamic_convolve(
     timestamps: Tensor | None = None,
     fs: float | None = None,
 ) -> Tensor:
+    """Alias for convolve_dynamic_rir."""
     return convolve_dynamic_rir(signal, rirs, hop, timestamps=timestamps, fs=fs)
 
 
 def _convolve_dynamic_rir_hop(signal: Tensor, rirs: Tensor, hop: int) -> Tensor:
+    """Dynamic convolution using fixed hop-size segments."""
     t_steps, n_src, n_mic, rir_len = rirs.shape
 
     frames = math.ceil(signal.shape[1] / hop)
@@ -105,6 +139,7 @@ def _convolve_dynamic_rir_trajectory(
     timestamps: Tensor | None,
     fs: float | None,
 ) -> Tensor:
+    """Dynamic convolution using variable segments like gpuRIR simulateTrajectory."""
     n_samples = signal.shape[1]
     t_steps, n_src, n_mic, rir_len = rirs.shape
 
@@ -153,6 +188,7 @@ def _convolve_dynamic_rir_trajectory(
 
 
 def _ensure_signal(signal: Tensor) -> Tensor:
+    """Ensure signal has shape (n_src, n_samples)."""
     if signal.ndim == 1:
         return signal.unsqueeze(0)
     if signal.ndim == 2:
@@ -161,6 +197,7 @@ def _ensure_signal(signal: Tensor) -> Tensor:
 
 
 def _ensure_static_rirs(rirs: Tensor) -> Tensor:
+    """Normalize static RIR shapes to (n_src, n_mic, rir_len)."""
     if rirs.ndim == 1:
         return rirs.view(1, 1, -1)
     if rirs.ndim == 2:
@@ -171,6 +208,7 @@ def _ensure_static_rirs(rirs: Tensor) -> Tensor:
 
 
 def _ensure_dynamic_rirs(rirs: Tensor, signal: Tensor) -> Tensor:
+    """Normalize dynamic RIR shapes to (T, n_src, n_mic, rir_len)."""
     if rirs.ndim == 2:
         return rirs.view(rirs.shape[0], 1, 1, rirs.shape[1])
     if rirs.ndim == 3:

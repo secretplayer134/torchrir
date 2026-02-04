@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Utility functions for geometry, acoustics, and tensor handling."""
+
 import math
 from typing import Iterable, Optional, Tuple
 
@@ -11,11 +13,12 @@ _DEF_SPEED_OF_SOUND = 343.0
 
 
 def as_tensor(
-    value,
+    value: Tensor | Iterable[float] | float | int,
     *,
     device: Optional[torch.device | str] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> Tensor:
+    """Convert a value to a tensor while preserving device/dtype when possible."""
     if torch.is_tensor(value):
         out = value
         if device is not None:
@@ -31,6 +34,7 @@ def infer_device_dtype(
     device: Optional[torch.device | str] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> Tuple[torch.device, torch.dtype]:
+    """Infer device/dtype from inputs with optional overrides."""
     if device is None or dtype is None:
         for value in values:
             if torch.is_tensor(value):
@@ -46,12 +50,14 @@ def infer_device_dtype(
 
 
 def ensure_dim(size: Tensor) -> Tensor:
+    """Validate room size dimensionality (2D or 3D)."""
     if size.ndim != 1 or size.numel() not in (2, 3):
         raise ValueError("room size must be a 1D tensor of length 2 or 3")
     return size
 
 
 def extend_size(size: Tensor, dim: int) -> Tensor:
+    """Extend 2D room size to 3D by adding a dummy z dimension."""
     if size.numel() == dim:
         return size
     if size.numel() == 2 and dim == 3:
@@ -67,6 +73,7 @@ def estimate_beta_from_t60(
     device: Optional[torch.device | str] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> Tensor:
+    """Estimate reflection coefficients from T60 using Sabine's formula."""
     if t60 <= 0:
         raise ValueError("t60 must be positive")
     size = as_tensor(size, device=device, dtype=dtype)
@@ -98,6 +105,7 @@ def estimate_t60_from_beta(
     device: Optional[torch.device | str] = None,
     dtype: Optional[torch.dtype] = None,
 ) -> float:
+    """Estimate T60 from reflection coefficients using Sabine's formula."""
     size = as_tensor(size, device=device, dtype=dtype)
     size = ensure_dim(size)
     beta = as_tensor(beta, device=size.device, dtype=size.dtype)
@@ -136,6 +144,7 @@ def estimate_t60_from_beta(
 
 
 def orientation_to_unit(orientation: Tensor, dim: int) -> Tensor:
+    """Convert orientation representation to unit vectors in 2D/3D."""
     if dim == 2:
         if orientation.ndim == 0:
             angle = orientation
@@ -168,6 +177,7 @@ def orientation_to_unit(orientation: Tensor, dim: int) -> Tensor:
 
 
 def att2t_sabine_estimation(att_db: float, t60: float) -> float:
+    """Convert attenuation (dB) to time based on T60."""
     if t60 <= 0:
         raise ValueError("t60 must be positive")
     if att_db <= 0:
@@ -176,14 +186,17 @@ def att2t_sabine_estimation(att_db: float, t60: float) -> float:
 
 
 def att2t_SabineEstimation(att_db: float, t60: float) -> float:
+    """Legacy alias for att2t_sabine_estimation."""
     return att2t_sabine_estimation(att_db, t60)
 
 
 def beta_SabineEstimation(room_size: Tensor, t60: float) -> Tensor:
+    """Legacy alias for estimate_beta_from_t60."""
     return estimate_beta_from_t60(room_size, t60)
 
 
 def t2n(tmax: float, room_size: Tensor, c: float = _DEF_SPEED_OF_SOUND) -> Tensor:
+    """Estimate image counts per dimension needed to cover tmax."""
     if tmax <= 0:
         raise ValueError("tmax must be positive")
     size = as_tensor(room_size)
@@ -195,6 +208,7 @@ def t2n(tmax: float, room_size: Tensor, c: float = _DEF_SPEED_OF_SOUND) -> Tenso
 
 
 def normalize_orientation(orientation: Tensor, *, eps: float = 1e-8) -> Tensor:
+    """Normalize orientation vectors with numerical stability."""
     norm = torch.linalg.norm(orientation, dim=-1, keepdim=True)
     norm = torch.clamp(norm, min=eps)
     return orientation / norm

@@ -1,3 +1,5 @@
+"""TorchRIR public API."""
+
 from .config import (
     activate_lut,
     activate_mixed_precision,

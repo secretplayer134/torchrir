@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, Sequence, Tuple
+"""Matplotlib-based plotting helpers for room scenes."""
+
+from typing import Any, Iterable, Optional, Sequence, Tuple
 
 import torch
 from torch import Tensor
@@ -14,10 +16,11 @@ def plot_scene_static(
     room: Room | Sequence[float] | Tensor,
     sources: Source | Tensor | Sequence,
     mics: MicrophoneArray | Tensor | Sequence,
-    ax=None,
+    ax: Any | None = None,
     title: Optional[str] = None,
     show: bool = False,
 ):
+    """Plot a static room with source and mic positions."""
     plt, ax = _setup_axes(ax, room)
 
     size = _room_size(room, ax)
@@ -43,10 +46,11 @@ def plot_scene_dynamic(
     src_traj: Tensor | Sequence,
     mic_traj: Tensor | Sequence,
     step: int = 1,
-    ax=None,
+    ax: Any | None = None,
     title: Optional[str] = None,
     show: bool = False,
 ):
+    """Plot source and mic trajectories within a room."""
     plt, ax = _setup_axes(ax, room)
 
     size = _room_size(room, ax)
@@ -66,7 +70,8 @@ def plot_scene_dynamic(
     return ax
 
 
-def _setup_axes(ax, room):
+def _setup_axes(ax: Any | None, room: Room | Sequence[float] | Tensor) -> tuple[Any, Any]:
+    """Create 2D/3D axes based on room dimension."""
     import matplotlib.pyplot as plt
 
     size = _room_size(room, ax)
@@ -80,7 +85,8 @@ def _setup_axes(ax, room):
     return plt, ax
 
 
-def _room_size(room, ax) -> Tensor:
+def _room_size(room: Room | Sequence[float] | Tensor, ax: Any | None) -> Tensor:
+    """Normalize room size input to a 1D tensor."""
     if isinstance(room, Room):
         size = room.size
     else:
@@ -90,7 +96,8 @@ def _room_size(room, ax) -> Tensor:
     return size
 
 
-def _draw_room(ax, size: Tensor) -> None:
+def _draw_room(ax: Any, size: Tensor) -> None:
+    """Draw a 2D or 3D room outline."""
     dim = size.numel()
     if dim == 2:
         _draw_room_2d(ax, size)
@@ -98,7 +105,8 @@ def _draw_room(ax, size: Tensor) -> None:
         _draw_room_3d(ax, size)
 
 
-def _draw_room_2d(ax, size: Tensor) -> None:
+def _draw_room_2d(ax: Any, size: Tensor) -> None:
+    """Draw a 2D rectangular room."""
     import matplotlib.patches as patches
 
     rect = patches.Rectangle((0.0, 0.0), size[0].item(), size[1].item(),
@@ -111,7 +119,8 @@ def _draw_room_2d(ax, size: Tensor) -> None:
     ax.set_ylabel("y")
 
 
-def _draw_room_3d(ax, size: Tensor) -> None:
+def _draw_room_3d(ax: Any, size: Tensor) -> None:
+    """Draw a 3D box representing the room."""
     x, y, z = size.tolist()
     corners = torch.tensor(
         [
@@ -155,7 +164,8 @@ def _draw_room_3d(ax, size: Tensor) -> None:
     ax.set_zlabel("z")
 
 
-def _extract_positions(entity, ax) -> Tensor:
+def _extract_positions(entity: Source | MicrophoneArray | Tensor | Sequence, ax: Any | None) -> Tensor:
+    """Extract positions from Source/MicrophoneArray or raw tensor."""
     if isinstance(entity, (Source, MicrophoneArray)):
         pos = entity.positions
     else:
@@ -166,7 +176,8 @@ def _extract_positions(entity, ax) -> Tensor:
     return pos
 
 
-def _scatter_positions(ax, positions: Tensor, *, label: str, marker: str) -> None:
+def _scatter_positions(ax: Any, positions: Tensor, *, label: str, marker: str) -> None:
+    """Scatter-plot positions in 2D or 3D."""
     if positions.numel() == 0:
         return
     dim = positions.shape[1]
@@ -176,14 +187,16 @@ def _scatter_positions(ax, positions: Tensor, *, label: str, marker: str) -> Non
         ax.scatter(positions[:, 0], positions[:, 1], positions[:, 2], label=label, marker=marker)
 
 
-def _as_trajectory(traj, ax) -> Tensor:
+def _as_trajectory(traj: Tensor | Sequence, ax: Any | None) -> Tensor:
+    """Validate and normalize a trajectory tensor."""
     traj = as_tensor(traj)
     if traj.ndim != 3:
         raise ValueError("trajectory must be of shape (T, N, dim)")
     return traj
 
 
-def _plot_trajectories(ax, traj: Tensor, *, step: int, label: str) -> None:
+def _plot_trajectories(ax: Any, traj: Tensor, *, step: int, label: str) -> None:
+    """Plot trajectories for each entity."""
     if traj.numel() == 0:
         return
     dim = traj.shape[2]

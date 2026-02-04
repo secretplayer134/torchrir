@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""CMU ARCTIC dataset helpers."""
+
 import sys
 import tarfile
 import urllib.request
@@ -33,17 +35,26 @@ VALID_SPEAKERS = {
 
 
 def list_cmu_arctic_speakers() -> List[str]:
+    """Return supported CMU ARCTIC speaker IDs."""
     return sorted(VALID_SPEAKERS)
 
 
 @dataclass
 class CmuArcticSentence:
+    """Sentence metadata from CMU ARCTIC."""
     utterance_id: str
     text: str
 
 
 class CmuArcticDataset:
     def __init__(self, root: Path, speaker: str = "bdl", download: bool = False) -> None:
+        """Initialize a CMU ARCTIC dataset handle.
+
+        Args:
+            root: Root directory where the dataset is stored.
+            speaker: Speaker ID (e.g., "bdl").
+            download: Download and extract if missing.
+        """
         if speaker not in VALID_SPEAKERS:
             raise ValueError(f"unsupported speaker: {speaker}")
         self.root = Path(root)
@@ -63,13 +74,16 @@ class CmuArcticDataset:
 
     @property
     def wav_dir(self) -> Path:
+        """Return the directory containing wav files."""
         return self._dataset_dir / "wav"
 
     @property
     def text_path(self) -> Path:
+        """Return the path to txt.done.data."""
         return self._dataset_dir / "etc" / "txt.done.data"
 
     def _download_and_extract(self) -> None:
+        """Download and extract the speaker archive if needed."""
         self._base_dir.mkdir(parents=True, exist_ok=True)
         archive_path = self._base_dir / self._archive_name
         url = f"{BASE_URL}/{self._archive_name}"
@@ -91,6 +105,7 @@ class CmuArcticDataset:
                     tar.extractall(self._base_dir)
 
     def sentences(self) -> List[CmuArcticSentence]:
+        """Parse all sentence metadata."""
         sentences: List[CmuArcticSentence] = []
         with self.text_path.open("r", encoding="utf-8") as f:
             for line in f:
@@ -102,18 +117,22 @@ class CmuArcticDataset:
         return sentences
 
     def available_sentences(self) -> List[CmuArcticSentence]:
+        """Return sentences that have a corresponding wav file."""
         wav_ids = {p.stem for p in self.wav_dir.glob("*.wav")}
         return [s for s in self.sentences() if s.utterance_id in wav_ids]
 
     def wav_path(self, utterance_id: str) -> Path:
+        """Return the wav path for an utterance ID."""
         return self.wav_dir / f"{utterance_id}.wav"
 
     def load_wav(self, utterance_id: str) -> Tuple[torch.Tensor, int]:
+        """Load a mono wav for the given utterance ID."""
         path = self.wav_path(utterance_id)
         return load_wav_mono(path)
 
 
 def _download(url: str, dest: Path, retries: int = 1) -> None:
+    """Download a file with retry and resume-safe temp file."""
     for attempt in range(retries + 1):
         try:
             _stream_download(url, dest)
@@ -127,6 +146,7 @@ def _download(url: str, dest: Path, retries: int = 1) -> None:
 
 
 def _stream_download(url: str, dest: Path) -> None:
+    """Stream a URL to disk with a progress indicator."""
     tmp_path = dest.with_suffix(dest.suffix + ".part")
     if tmp_path.exists():
         tmp_path.unlink()
@@ -154,6 +174,7 @@ def _stream_download(url: str, dest: Path) -> None:
 
 
 def _parse_text_line(line: str) -> Tuple[str, str]:
+    """Parse a txt.done.data line into (utterance_id, text)."""
     left, _, right = line.partition('"')
     utterance = left.replace("(", "").strip().split()[0]
     text = right.rsplit('"', 1)[0]
@@ -161,6 +182,7 @@ def _parse_text_line(line: str) -> Tuple[str, str]:
 
 
 def load_wav_mono(path: Path) -> Tuple[torch.Tensor, int]:
+    """Load a wav file and return mono audio and sample rate."""
     import soundfile as sf
 
     audio, sample_rate = sf.read(str(path), dtype="float32", always_2d=True)
@@ -173,6 +195,7 @@ def load_wav_mono(path: Path) -> Tuple[torch.Tensor, int]:
 
 
 def save_wav(path: Path, audio: torch.Tensor, sample_rate: int) -> None:
+    """Save a mono or multi-channel wav to disk."""
     import soundfile as sf
 
     audio = audio.detach().cpu().clamp(-1.0, 1.0).to(torch.float32)
