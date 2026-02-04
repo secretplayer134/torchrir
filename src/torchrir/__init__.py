@@ -7,6 +7,7 @@ from .logging_utils import LoggingConfig, get_logger, setup_logging
 from .plotting import plot_scene_dynamic, plot_scene_static
 from .plotting_utils import plot_scene_and_save
 from .room import MicrophoneArray, Room, Source
+from .scene import Scene
 from .signal import convolve_dynamic_rir, convolve_rir, dynamic_convolve, fft_convolve
 from .datasets import (
     BaseDataset,
@@ -69,6 +70,7 @@ __all__ = [
     "plot_scene_and_save",
     "plot_scene_static",
     "save_wav",
+    "Scene",
     "setup_logging",
     "SimulationConfig",
     "default_config",

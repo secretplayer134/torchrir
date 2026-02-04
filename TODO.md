@@ -27,7 +27,7 @@ This TODO list is ordered by priority (higher priority items appear first).
 - [x] Add `LoggingConfig` and standardize log levels across examples and library.
 
 ## Domain Model (stabilize inputs/outputs)
-- [ ] Add `Scene` dataclass to encapsulate room, sources, mics, and optional trajectories.
+- [x] Add `Scene` dataclass to encapsulate room, sources, mics, and optional trajectories.
 - [ ] Add `SimulationConfig` dataclass for algorithm settings (fs, max_order, tmax, directivity, device, seed).
 - [ ] Add `RIRResult` dataclass to return RIR plus metadata (scene/config/timestamps/seed).
 - [ ] Make `Room`, `Source`, `MicrophoneArray` immutable and add `.replace()` helpers.

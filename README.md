@@ -57,6 +57,14 @@ logger = get_logger("examples")
 logger.info("running torchrir example")
 ```
 
+### Scene container
+```python
+from torchrir import Scene
+
+scene = Scene(room=room, sources=sources, mics=mics, src_traj=src_traj, mic_traj=mic_traj)
+scene.validate()
+```
+
 ## Device Selection
 - `device="cpu"`: CPU execution
 - `device="cuda"`: NVIDIA GPU (CUDA) if available, otherwise fallback to CPU
