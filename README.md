@@ -62,6 +62,12 @@ logger.info("running torchrir example")
 - `device="mps"`: Apple Silicon GPU via Metal (MPS) if available, otherwise fallback to CPU
 - `device="auto"`: prefer CUDA → MPS → CPU
 
+```python
+from torchrir import DeviceSpec
+
+device, dtype = DeviceSpec(device="auto").resolve()
+```
+
 ## References
 - [gpuRIR](https://github.com/DavidDiazGuerra/gpuRIR)
 - [pyroomacoustics](https://github.com/LCAV/pyroomacoustics)

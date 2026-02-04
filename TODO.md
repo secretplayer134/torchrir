@@ -4,7 +4,7 @@ This TODO list is ordered by priority (higher priority items appear first).
 
 ## GPU/CPU Parity (gpuRIR-style acceleration)
 - [x] Add unified device selection (cpu/cuda/mps/auto) with availability checks and fallbacks.
-- [ ] Introduce a `DeviceSpec` helper to resolve device + dtype defaults consistently.
+- [x] Introduce a `DeviceSpec` helper to resolve device + dtype defaults consistently.
 - [x] Replace Python loops in RIR accumulation with batched GPU kernels (torch.compile path), and add MPS-safe fallbacks.
 - [x] Implement gpuRIR-like convolution kernel for trajectory mode (segment-wise GPU conv).
 - [x] Add a GPU-optimized image source generator (vectorized across sources/mics/images).
