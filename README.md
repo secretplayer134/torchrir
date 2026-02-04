@@ -169,13 +169,6 @@ from torchrir import DeviceSpec
 device, dtype = DeviceSpec(device="auto").resolve()
 ```
 
-## References
-- [gpuRIR](https://github.com/DavidDiazGuerra/gpuRIR)
-- [Cross3D](https://github.com/DavidDiazGuerra/Cross3D)
-- [pyroomacoustics](https://github.com/LCAV/pyroomacoustics)
-- [das-generator](https://github.com/ehabets/das-generator)
-- [rir-generator](https://github.com/audiolabs/rir-generator)
-
 ## Specification (Current)
 ### Purpose
 - Provide room impulse response (RIR) simulation on PyTorch with CPU/CUDA/MPS support.
@@ -251,8 +244,13 @@ y = DynamicConvolver(mode="trajectory").convolve(signal, rirs)
 
 ## Future Work
 - Ray tracing backend: implement `RayTracingSimulator` with frequency-dependent absorption/scattering.
-- FDTD backend: implement `FDTDSimulator` with configurable grid resolution and boundary conditions.
+- CUDA-native acceleration: introduce dedicated CUDA kernels for large-scale RIR generation.
 - Dataset expansion: add additional dataset integrations beyond CMU ARCTIC (see `TemplateDataset`).
-- Enhanced acoustics: frequency-dependent absorption and more advanced diffuse tail models.
-- Add microphone and source directivity models similar to gpuRIR/pyroomacoustics.
 - Add regression tests comparing generated RIRs against gpuRIR outputs.
+
+## Related Libraries
+- [gpuRIR](https://github.com/DavidDiazGuerra/gpuRIR)
+- [Cross3D](https://github.com/DavidDiazGuerra/Cross3D)
+- [pyroomacoustics](https://github.com/LCAV/pyroomacoustics)
+- [das-generator](https://github.com/ehabets/das-generator)
+- [rir-generator](https://github.com/audiolabs/rir-generator)

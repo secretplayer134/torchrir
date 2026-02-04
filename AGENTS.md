@@ -15,8 +15,8 @@
 - Common commands:
   - `uv sync` to create/update the virtual environment
   - `uv run pytest` to run tests
-  - `uv run ruff check .` or `uv run black .` for lint/format
   - `uv build` / `uv publish` for releases (must still support `pip install torchrir`)
+  - `uv run sphinx-build -b html docs docs/_build/html` to build docs locally
 
 ## Coding Style & Naming Conventions
 - Prefer Python for core implementation, with PyTorch used for computation.
@@ -38,6 +38,12 @@
   - A concise summary of changes
   - Any linked issues or design notes
   - Example outputs or benchmarks when touching performance-critical code
+
+## Versioning & Releases
+- Use Commitizen for version bumps, tagging, and changelog updates.
+  - Run: `uv run cz bump --changelog --tag`
+  - Version comes from `pyproject.toml` (PEP 621) and tag format is `vX.Y.Z`.
+- After bumping, push commits and tags (`git push origin main --tags`).
 
 ## Security & Configuration Tips
 - Avoid committing large audio files or datasets; prefer documented download steps.
