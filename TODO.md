@@ -14,7 +14,7 @@ This TODO list is ordered by priority (higher priority items appear first).
 - [x] Introduce `DynamicConvolver` class:
   - `mode="trajectory"` (gpuRIR-style timestamps/segments)
   - `mode="hop"` (legacy fixed hop)
-- [ ] Deprecate direct `hop` argument on `convolve_dynamic_rir` in favor of the class.
+- [x] Deprecate direct `hop` argument on `convolve_dynamic_rir` in favor of the class.
 
 ## Dataset Abstraction
 - [x] Define `BaseDataset` protocol:

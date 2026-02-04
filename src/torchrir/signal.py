@@ -3,6 +3,7 @@ from __future__ import annotations
 """Signal convolution utilities."""
 
 import math
+import warnings
 
 import torch
 from torch import Tensor
@@ -70,15 +71,21 @@ def convolve_dynamic_rir(
     Args:
         signal: (n_src, n_samples) or (n_samples,) tensor.
         rirs: (T, n_src, n_mic, rir_len) or compatible shape.
-        hop: Fixed hop size for block convolution (legacy mode).
+        hop: Fixed hop size for block convolution (deprecated; use DynamicConvolver).
         timestamps: Optional time stamps (seconds) for each RIR step.
         fs: Sample rate required when timestamps are provided.
 
     Returns:
         (n_mic, n_samples + rir_len - 1) tensor or 1D for single mic.
     """
-    if hop is not None and hop <= 0:
-        raise ValueError("hop must be positive")
+    if hop is not None:
+        warnings.warn(
+            "convolve_dynamic_rir(hop=...) is deprecated; use DynamicConvolver(mode='hop').",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if hop <= 0:
+            raise ValueError("hop must be positive")
     if hop is not None and timestamps is not None:
         raise ValueError("use either hop or timestamps, not both")
 
