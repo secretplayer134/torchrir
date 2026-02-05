@@ -2,11 +2,24 @@ from __future__ import annotations
 
 """Audio file utilities (dataset-agnostic)."""
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple
 import warnings
 
 import torch
+
+
+@dataclass(frozen=True)
+class AudioInfo:
+    """Basic audio file metadata."""
+
+    sample_rate: int
+    num_frames: int
+    num_channels: int
+    format: str
+    subtype: str
+    duration: float
 
 
 def _load_audio(path: Path, *, caller: str) -> Tuple[torch.Tensor, int]:
@@ -142,4 +155,19 @@ def save_audio(
         normalize=normalize,
         peak=peak,
         subtype=subtype,
+    )
+
+
+def info_audio(path: Path) -> AudioInfo:
+    """Return metadata for an audio file (wav/flac/other supported by soundfile)."""
+    import soundfile as sf
+
+    info = sf.info(str(path))
+    return AudioInfo(
+        sample_rate=info.samplerate,
+        num_frames=info.frames,
+        num_channels=info.channels,
+        format=info.format,
+        subtype=info.subtype,
+        duration=float(info.duration),
     )

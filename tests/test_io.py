@@ -5,7 +5,14 @@ from pathlib import Path
 import pytest
 import torch
 
-from torchrir.io import load, save
+from torchrir.io import (
+    get_audio_backend,
+    info,
+    list_audio_backends,
+    load,
+    save,
+    set_audio_backend,
+)
 from torchrir.io.audio import load_audio, save_audio
 
 
@@ -58,3 +65,23 @@ def test_load_audio_accepts_optional_non_wav(tmp_path: Path) -> None:
     loaded, loaded_fs = load_audio(path)
     assert loaded_fs == fs
     assert loaded.ndim == 1
+
+
+def test_audio_backend_registry() -> None:
+    backends = list_audio_backends()
+    assert "soundfile" in backends
+    assert get_audio_backend() in backends
+    set_audio_backend("soundfile")
+    with pytest.raises(ValueError, match="Unknown audio backend"):
+        set_audio_backend("unknown-backend")
+
+
+def test_info_wav(tmp_path: Path) -> None:
+    fs = 22050
+    audio = _sine_wave(2048, fs)
+    path = tmp_path / "info.wav"
+    save(path, audio, fs, normalize=False)
+    meta = info(path)
+    assert meta.sample_rate == fs
+    assert meta.num_channels == 1
+    assert meta.num_frames == audio.numel()
