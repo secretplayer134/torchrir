@@ -163,15 +163,16 @@ Expected output (logs):
 - `mps dynamic avg: ... ms`
 - `speedup: ...x`
 
-## Dynamic CMU ARCTIC dataset (fixed room, fixed mic, moving sources)
+## Dynamic dataset builder (fixed room, fixed mic, moving sources)
 
 This example generates a small dynamic dataset inspired by Cross3D: the room
 and binaural microphone are fixed, while source positions and trajectories are
 randomized per scene. Each scene produces a convolved mixture and metadata.
+You can choose CMU ARCTIC or LibriSpeech from the command line.
 
 ### What it does
 
-- Uses CMU ARCTIC utterances as source signals.
+- Uses CMU ARCTIC or LibriSpeech utterances as source signals.
 - Samples random source trajectories (linear or zigzag) within a fixed room.
 - Keeps the microphone array fixed across all scenes.
 - Simulates dynamic RIRs and convolves the sources.
@@ -186,10 +187,22 @@ For each scene index `k`:
 - `scene_k_static_2d.png` / `scene_k_dynamic_2d.png` — layout plots
   (3D variants are saved when the room is 3D)
 
-### Run
+### Run (CMU ARCTIC)
 
 ```bash
-uv run python examples/cmu_arctic_dynamic_dataset.py \
+uv run python examples/build_dynamic_dataset.py \
+  --dataset cmu_arctic \
+  --num-scenes 4 \
+  --num-sources 2 \
+  --duration 6
+```
+
+### Run (LibriSpeech)
+
+```bash
+uv run python examples/build_dynamic_dataset.py \
+  --dataset librispeech \
+  --subset train-clean-100 \
   --num-scenes 4 \
   --num-sources 2 \
   --duration 6
@@ -197,8 +210,11 @@ uv run python examples/cmu_arctic_dynamic_dataset.py \
 
 ### Key arguments
 
+- `--dataset`: dataset backend (`cmu_arctic` / `librispeech`).
+- `--subset`: LibriSpeech subset (e.g., `train-clean-100`).
 - `--num-scenes`: number of scenes to generate.
 - `--num-sources`: number of sources per scene.
+- `--num-moving-sources`: number of sources that move (others stay fixed).
 - `--duration`: length (seconds) of each source mixture.
 - `--steps`: number of RIR steps (trajectory resolution).
 - `--order`: ISM reflection order.
@@ -206,12 +222,12 @@ uv run python examples/cmu_arctic_dynamic_dataset.py \
 - `--seed`: RNG seed for reproducibility.
 - `--dataset-dir`: dataset root path.
 - `--out-dir`: output directory for per-scene WAV/JSON/plots.
-- `--plot` / `--no-plot`: enable/disable plotting.
+- `--plot`: enable plotting (default: off).
 - `--device`: cpu/cuda/mps/auto.
 
 ### Implementation notes
 
-The example is implemented in `examples/cmu_arctic_dynamic_dataset.py` and uses:
+The example is implemented in `examples/build_dynamic_dataset.py` and uses:
 
 - `torchrir.datasets.load_dataset_sources` to build fixed-length signals from multiple utterances.
 - `torchrir.sim.simulate_dynamic_rir` to generate the dynamic RIR sequence.
@@ -221,65 +237,9 @@ The example is implemented in `examples/cmu_arctic_dynamic_dataset.py` and uses:
 ### Additional example
 
 ```bash
-uv run python examples/cmu_arctic_dynamic_dataset.py --num-scenes 2 --no-plot --out-dir outputs/ds_small
+uv run python examples/build_dynamic_dataset.py --dataset cmu_arctic --num-scenes 2 --out-dir outputs/ds_small
 ```
 
 Expected outputs:
 - `outputs/ds_small/scene_000.wav`, `scene_001.wav`
 - `outputs/ds_small/scene_000_metadata.json`, `scene_001_metadata.json`
-
-## Dynamic LibriSpeech dataset (fixed room, fixed mic, moving sources)
-
-This example mirrors the CMU ARCTIC version, but uses LibriSpeech utterances.
-
-### What it does
-
-- Uses LibriSpeech utterances as source signals.
-- Samples random source trajectories (linear or zigzag) within a fixed room.
-- Keeps the microphone array fixed across all scenes.
-- Simulates dynamic RIRs and convolves the sources.
-- Saves one WAV and one metadata JSON per scene.
-
-### Output files
-
-For each scene index `k`:
-
-- `scene_k.wav` — binaural mixture
-- `scene_k_metadata.json` — room size, trajectories, DOA, array attributes, etc.
-- `scene_k_static_2d.png` / `scene_k_dynamic_2d.png` — layout plots
-  (3D variants are saved when the room is 3D)
-
-### Run
-
-```bash
-uv run python examples/librispeech_dynamic_dataset.py \
-  --subset train-clean-100 \
-  --num-scenes 4 \
-  --num-sources 2 \
-  --duration 6
-```
-
-### Key arguments
-
-- `--subset`: LibriSpeech subset (e.g., `train-clean-100`).
-- `--num-scenes`: number of scenes to generate.
-- `--num-sources`: number of sources per scene.
-- `--duration`: length (seconds) of each source mixture.
-- `--steps`: number of RIR steps (trajectory resolution).
-- `--order`: ISM reflection order.
-- `--tmax`: RIR length in seconds.
-- `--seed`: RNG seed for reproducibility.
-- `--dataset-dir`: dataset root path.
-- `--out-dir`: output directory for per-scene WAV/JSON/plots.
-- `--plot` / `--no-plot`: enable/disable plotting.
-- `--device`: cpu/cuda/mps/auto.
-
-### Additional example
-
-```bash
-uv run python examples/librispeech_dynamic_dataset.py --subset dev-clean --num-scenes 2 --no-plot
-```
-
-Expected outputs:
-- `scene_000.wav`, `scene_001.wav`
-- `scene_000_metadata.json`, `scene_001_metadata.json`

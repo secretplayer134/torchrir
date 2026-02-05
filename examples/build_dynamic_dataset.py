@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Sample: build a small dynamic dataset (fixed room/mics, moving sources).
+"""Sample: build a small dynamic dataset with CMU ARCTIC or LibriSpeech.
 
 This example mirrors the high-level idea in Cross3D: generate many dynamic
 acoustic scenes with randomized source motion, then store the resulting
@@ -9,7 +9,7 @@ mixtures plus per-scene metadata.
 Key characteristics:
     - Fixed room geometry and fixed binaural microphone layout across scenes.
     - Randomized source positions and motion patterns per scene.
-    - CMU ARCTIC utterances as source signals.
+    - Configurable dataset backend (CMU ARCTIC / LibriSpeech).
     - Dynamic RIR simulation via ISM + trajectory-mode convolution.
     - Per-scene WAV and JSON metadata outputs.
 
@@ -18,15 +18,18 @@ Outputs (per scene index k):
     - scene_k_metadata.json
     - scene_k_static_2d.png / scene_k_dynamic_2d.png (and 3D variants when enabled)
 
-Run:
-    uv run python examples/cmu_arctic_dynamic_dataset.py --num-scenes 4 --num-sources 2 --duration 6
+Run (CMU ARCTIC):
+    uv run python examples/build_dynamic_dataset.py --dataset cmu_arctic --num-scenes 4
+
+Run (LibriSpeech):
+    uv run python examples/build_dynamic_dataset.py --dataset librispeech --subset train-clean-100
 """
 
 import argparse
 import random
 import sys
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import torch
 
@@ -43,7 +46,7 @@ EXAMPLES_DIR = Path(__file__).resolve().parent
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
 
-from torchrir.datasets import CmuArcticDataset, load_dataset_sources
+from torchrir.datasets import CmuArcticDataset, LibriSpeechDataset, load_dataset_sources
 from torchrir.geometry import arrays, sampling, trajectories
 from torchrir.io import save_scene_audio, save_scene_metadata
 from torchrir.signal import DynamicConvolver
@@ -52,11 +55,40 @@ from torchrir.util import add_output_args, resolve_device
 from torchrir.viz import save_scene_plots
 
 
+def _serialize_args(args) -> dict[str, object]:
+    return {
+        "dataset": args.dataset,
+        "dataset_dir": str(args.dataset_dir),
+        "subset": args.subset,
+        "download": args.download,
+        "num_scenes": args.num_scenes,
+        "num_sources": args.num_sources,
+        "num_moving_sources": args.num_moving_sources,
+        "duration": args.duration,
+        "seed": args.seed,
+        "room": list(args.room),
+        "steps": args.steps,
+        "order": args.order,
+        "tmax": args.tmax,
+        "device": args.device,
+        "out_dir": str(args.out_dir),
+        "plot": args.plot,
+        "log_level": args.log_level,
+    }
+
+
 def _dataset_factory(
-    root: Path, download: bool, speaker: str | None
-) -> CmuArcticDataset:
-    spk = speaker or "bdl"
-    return CmuArcticDataset(root, speaker=spk, download=download)
+    *,
+    dataset: str,
+    root: Path,
+    subset: str,
+    download: bool,
+    speaker: Optional[str],
+):
+    if dataset == "cmu_arctic":
+        spk = speaker or "bdl"
+        return CmuArcticDataset(root, speaker=spk, download=download)
+    return LibriSpeechDataset(root, subset=subset, speaker=speaker, download=download)
 
 
 def _random_trajectory(
@@ -92,11 +124,12 @@ def _random_trajectory(
 def _build_source_trajectories(
     *,
     num_sources: int,
+    num_moving_sources: int,
     room_size: torch.Tensor,
     mic_center: torch.Tensor,
     steps: int,
     rng: random.Random,
-) -> tuple[torch.Tensor, List[str]]:
+) -> tuple[torch.Tensor, List[str], List[int]]:
     # Sample a start for each source, then generate a trajectory per source.
     starts = sampling.sample_positions_min_distance(
         num=num_sources,
@@ -105,42 +138,57 @@ def _build_source_trajectories(
         center=mic_center,
         min_distance=1.5,
     )
+    num_moving = max(0, min(num_sources, num_moving_sources))
+    moving_indices = (
+        set(rng.sample(range(num_sources), k=num_moving)) if num_moving > 0 else set()
+    )
     trajs: List[torch.Tensor] = []
     modes: List[str] = []
     for idx in range(num_sources):
-        traj, mode = _random_trajectory(
-            start=starts[idx],
-            room_size=room_size,
-            steps=steps,
-            rng=rng,
-        )
+        if idx in moving_indices:
+            traj, mode = _random_trajectory(
+                start=starts[idx],
+                room_size=room_size,
+                steps=steps,
+                rng=rng,
+            )
+        else:
+            traj = starts[idx].unsqueeze(0).repeat(steps, 1)
+            mode = "static"
         trajs.append(traj)
         modes.append(mode)
     # Stack to (T, n_src, dim) and keep positions inside the room.
     src_traj = torch.stack(trajs, dim=1)
     src_traj = sampling.clamp_positions(src_traj, room_size)
-    return src_traj, modes
+    return src_traj, modes, sorted(moving_indices)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Dynamic CMU ARCTIC dataset sample")
+    parser = argparse.ArgumentParser(description="Build a small dynamic dataset")
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        choices=["cmu_arctic", "librispeech"],
+        default="cmu_arctic",
+        help="Dataset backend to use.",
+    )
     parser.add_argument(
         "--dataset-dir",
         type=Path,
-        default=Path("datasets/cmu_arctic"),
-        help="Root directory for the CMU ARCTIC dataset.",
+        default=None,
+        help="Root directory for the dataset (defaults by dataset).",
+    )
+    parser.add_argument(
+        "--subset",
+        type=str,
+        default="train-clean-100",
+        help="LibriSpeech subset (e.g., train-clean-100).",
     )
     parser.add_argument(
         "--download",
         action="store_true",
-        default=True,
+        default=False,
         help="Download the dataset if missing.",
-    )
-    parser.add_argument(
-        "--no-download",
-        action="store_false",
-        dest="download",
-        help="Disable dataset download.",
     )
     parser.add_argument(
         "--num-scenes",
@@ -153,6 +201,12 @@ def main() -> None:
         type=int,
         default=2,
         help="Number of sources per scene.",
+    )
+    parser.add_argument(
+        "--num-moving-sources",
+        type=int,
+        default=1,
+        help="Number of sources that move (others stay fixed).",
     )
     parser.add_argument(
         "--duration",
@@ -171,7 +225,7 @@ def main() -> None:
     parser.add_argument(
         "--steps",
         type=int,
-        default=16,
+        default=64,
         help="Number of RIR time steps for trajectories.",
     )
     parser.add_argument("--order", type=int, default=6, help="ISM reflection order.")
@@ -187,15 +241,25 @@ def main() -> None:
     add_output_args(
         parser,
         out_dir_default="outputs/dynamic_dataset",
-        plot_default=True,
+        plot_default=False,
         include_gif=False,
+        include_show=False,
     )
     parser.add_argument("--log-level", type=str, default="INFO", help="Log level.")
     args = parser.parse_args()
 
     # Logging + fixed room setup.
     setup_logging(LoggingConfig(level=args.log_level))
-    logger = get_logger("examples.cmu_arctic_dynamic_dataset")
+    logger = get_logger("examples.build_dynamic_dataset")
+
+    dataset_root = args.dataset_dir
+    if dataset_root is None:
+        dataset_root = (
+            Path("datasets/cmu_arctic")
+            if args.dataset == "cmu_arctic"
+            else Path("datasets/librispeech")
+        )
+    args.dataset_dir = dataset_root
 
     # Fixed room and fixed binaural microphone layout across all scenes.
     device = resolve_device(args.device)
@@ -218,7 +282,11 @@ def main() -> None:
         scene_rng = random.Random(args.seed + idx)
         signals, fs, info = load_dataset_sources(
             dataset_factory=lambda speaker: _dataset_factory(
-                args.dataset_dir, args.download, speaker
+                dataset=args.dataset,
+                root=dataset_root,
+                subset=args.subset,
+                download=args.download,
+                speaker=speaker,
             ),
             num_sources=args.num_sources,
             duration_s=args.duration,
@@ -228,8 +296,9 @@ def main() -> None:
 
         # Build random trajectories for each source; mics stay fixed.
         steps = max(2, args.steps)
-        src_traj, modes = _build_source_trajectories(
+        src_traj, modes, moving = _build_source_trajectories(
             num_sources=args.num_sources,
+            num_moving_sources=args.num_moving_sources,
             room_size=room_size,
             mic_center=mic_center,
             steps=steps,
@@ -250,7 +319,7 @@ def main() -> None:
                 src_traj=src_traj,
                 mic_traj=mic_traj,
                 prefix=f"scene_{idx:03d}",
-                show=args.show,
+                show=False,
                 logger=logger,
             )
 
@@ -273,7 +342,7 @@ def main() -> None:
             audio_name=f"scene_{idx:03d}.wav",
             logger=logger,
         )
-        metadata = save_scene_metadata(
+        save_scene_metadata(
             out_dir=args.out_dir,
             metadata_name=f"scene_{idx:03d}_metadata.json",
             room=room,
@@ -285,14 +354,19 @@ def main() -> None:
             signal_len=signals.shape[1],
             source_info=info,
             extra={
-                "mode": "dynamic_src",
-                "trajectory_modes": modes,
-                "scene_index": idx,
-                "seed": args.seed + idx,
-                "num_sources": args.num_sources,
+                "mode": "dynamic_dataset",
+                "dataset": args.dataset,
+                "subset": args.subset if args.dataset == "librispeech" else None,
+                "motion_modes": modes,
+                "moving_sources": moving,
+                "args": _serialize_args(args),
             },
             logger=logger,
         )
+
+        logger.info("scene %d: sources=%s", idx, info)
+        logger.info("scene %d: dynamic RIR shape=%s", idx, tuple(rirs.shape))
+        logger.info("scene %d: output shape=%s", idx, tuple(y.shape))
 
 
 if __name__ == "__main__":

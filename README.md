@@ -22,8 +22,8 @@ pip install torchrir
   `uv run python examples/dynamic_mic.py --plot`
 - `examples/cli.py`: unified CLI for static/dynamic scenes, JSON/YAML configs.  
   `uv run python examples/cli.py --mode static --plot`
-- `examples/cmu_arctic_dynamic_dataset.py`: small dynamic dataset generator (fixed room/mics, randomized source motion).  
-  `uv run python examples/cmu_arctic_dynamic_dataset.py --num-scenes 4 --num-sources 2`
+- `examples/build_dynamic_dataset.py`: small dynamic dataset generator (CMU ARCTIC / LibriSpeech; fixed room/mics, randomized source motion).  
+  `uv run python examples/build_dynamic_dataset.py --dataset cmu_arctic --num-scenes 4 --num-sources 2`
 - `examples/benchmark_device.py`: CPU/GPU benchmark for RIR simulation.  
   `uv run python examples/benchmark_device.py --dynamic`
 
