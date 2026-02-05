@@ -15,14 +15,14 @@ from .base import DatasetItem
 class CollateBatch:
     """Collated batch of dataset items.
 
-    Attributes:
-        audio: Padded audio tensor of shape (batch, max_len).
-        lengths: Original lengths for each item.
-        sample_rate: Sample rate shared across the batch.
-        utterance_ids: Utterance IDs per item.
-        texts: Optional text per item.
-        speakers: Optional speaker IDs per item.
-        metadata: Optional per-item metadata (pass-through).
+    Fields:
+        - audio: Padded audio tensor of shape (batch, max_len).
+        - lengths: Original lengths for each item.
+        - sample_rate: Sample rate shared across the batch.
+        - utterance_ids: Utterance IDs per item.
+        - texts: Optional text per item.
+        - speakers: Optional speaker IDs per item.
+        - metadata: Optional per-item metadata (pass-through).
     """
 
     audio: Tensor

@@ -1,4 +1,4 @@
-"""General-purpose utilities for torchrir."""
+"""General-purpose math, device, and tensor utilities for torchrir."""
 
 from .acoustics import (
     att2t_SabineEstimation,

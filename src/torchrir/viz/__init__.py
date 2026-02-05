@@ -1,4 +1,7 @@
-"""Visualization helpers for scenes and trajectories."""
+"""Visualization helpers for scenes and trajectories.
+
+Provides static/dynamic plotting plus GIF animation utilities.
+"""
 
 from .animation import animate_scene_gif
 from .io import plot_scene_and_save

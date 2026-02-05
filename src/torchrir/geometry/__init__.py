@@ -1,4 +1,8 @@
-"""Geometry helpers for arrays, trajectories, and sampling."""
+"""Geometry helpers for arrays, trajectories, and sampling.
+
+Includes standard array layouts (linear, circular, polyhedron, binaural,
+Eigenmike) plus position sampling utilities.
+"""
 
 from .arrays import (
     binaural_array,

@@ -1,3 +1,5 @@
 # Changelog
 
-This page is generated from `CHANGELOG.md` during the release workflow.
+```{include} ../CHANGELOG.md
+:heading-offset: 1
+```
