@@ -9,7 +9,6 @@ Experimental APIs live under ``torchrir.experimental`` and may change without
 notice. Prefer top-level ``torchrir`` and documented submodules for stable use.
 
 .. automodule:: torchrir
-   :members:
    :undoc-members:
    :show-inheritance:
 
