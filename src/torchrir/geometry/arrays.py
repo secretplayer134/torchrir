@@ -8,7 +8,7 @@ from typing import Sequence
 import torch
 from torch import Tensor
 
-from ..utils import as_tensor
+from ..util.tensor import as_tensor
 
 
 def binaural_array(

@@ -26,9 +26,9 @@ from .datasets import (
     TemplateSentence,
 )
 from .io import load_wav_mono, save_wav
-from . import infra, io, models, sim, signal, viz
+from . import infra, io, models, sim, signal, util, viz
 from . import geometry
-from .utils import (
+from .util import (
     att2t_SabineEstimation,
     att2t_sabine_estimation,
     beta_SabineEstimation,
@@ -83,6 +83,7 @@ __all__ = [
     "models",
     "sim",
     "signal",
+    "util",
     "viz",
     "plot_scene_dynamic",
     "plot_scene_and_save",

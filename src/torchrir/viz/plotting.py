@@ -8,7 +8,7 @@ import torch
 from torch import Tensor
 
 from ..models import MicrophoneArray, Room, Source
-from ..utils import as_tensor, ensure_dim
+from ..util.tensor import as_tensor, ensure_dim
 
 
 def plot_scene_static(

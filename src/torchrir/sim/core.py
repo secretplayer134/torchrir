@@ -12,16 +12,10 @@ from torch import Tensor
 from .config import SimulationConfig, default_config
 from .directivity import directivity_gain, split_directivity
 from ..models import MicrophoneArray, Room, Source
-from ..utils import (
-    as_tensor,
-    ensure_dim,
-    estimate_beta_from_t60,
-    estimate_t60_from_beta,
-    infer_device_dtype,
-    normalize_orientation,
-    orientation_to_unit,
-    resolve_device,
-)
+from ..util.acoustics import estimate_beta_from_t60, estimate_t60_from_beta
+from ..util.device import infer_device_dtype, resolve_device
+from ..util.orientation import normalize_orientation, orientation_to_unit
+from ..util.tensor import as_tensor, ensure_dim
 
 
 def simulate_rir(

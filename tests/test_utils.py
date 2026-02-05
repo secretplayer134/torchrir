@@ -3,7 +3,7 @@ import warnings
 
 import torch
 
-from torchrir.utils import (
+from torchrir.util import (
     estimate_beta_from_t60,
     estimate_t60_from_beta,
     infer_device_dtype,

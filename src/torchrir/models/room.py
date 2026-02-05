@@ -8,7 +8,7 @@ from typing import Optional, Sequence
 import torch
 from torch import Tensor
 
-from ..utils import as_tensor, ensure_dim
+from ..util.tensor import as_tensor, ensure_dim
 
 
 @dataclass(frozen=True)
