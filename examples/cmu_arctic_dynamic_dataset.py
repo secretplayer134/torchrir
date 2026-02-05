@@ -38,7 +38,6 @@ try:
         Source,
         get_logger,
         setup_logging,
-        simulate_dynamic_rir,
     )
 except ModuleNotFoundError:  # allow running without installation
     ROOT = Path(__file__).resolve().parents[1]
@@ -50,7 +49,6 @@ except ModuleNotFoundError:  # allow running without installation
         Source,
         get_logger,
         setup_logging,
-        simulate_dynamic_rir,
     )
 
 EXAMPLES_DIR = Path(__file__).resolve().parent
@@ -61,6 +59,7 @@ from torchrir.datasets import CmuArcticDataset, load_dataset_sources
 from torchrir.geometry import arrays, sampling, trajectories
 from torchrir.io import save_audio, save_metadata
 from torchrir.signal import DynamicConvolver
+from torchrir.sim import simulate_dynamic_rir
 from torchrir.util import add_output_args, resolve_device
 from torchrir.viz import save_scene_plots
 

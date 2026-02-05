@@ -1,7 +1,6 @@
 import torch
 
-from torchrir import convolve_rir
-from torchrir.signal import DynamicConvolver, fft_convolve
+from torchrir.signal import DynamicConvolver, convolve_rir, fft_convolve
 
 
 def test_fft_convolve_length():

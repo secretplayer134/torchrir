@@ -27,10 +27,8 @@ try:
         MicrophoneArray,
         Room,
         Source,
-        convolve_rir,
         get_logger,
         setup_logging,
-        simulate_rir,
     )
 except ModuleNotFoundError:  # allow running without installation
     ROOT = Path(__file__).resolve().parents[1]
@@ -40,10 +38,8 @@ except ModuleNotFoundError:  # allow running without installation
         MicrophoneArray,
         Room,
         Source,
-        convolve_rir,
         get_logger,
         setup_logging,
-        simulate_rir,
     )
 
 EXAMPLES_DIR = Path(__file__).resolve().parent
@@ -52,6 +48,8 @@ if str(EXAMPLES_DIR) not in sys.path:
 from torchrir.datasets import CmuArcticDataset, load_dataset_sources
 from torchrir.geometry import arrays, sampling
 from torchrir.io import save_audio, save_metadata
+from torchrir.signal import convolve_rir
+from torchrir.sim import simulate_rir
 from torchrir.util import add_output_args, resolve_device
 from torchrir.viz import save_scene_plots
 

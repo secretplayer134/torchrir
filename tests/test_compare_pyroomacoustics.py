@@ -5,7 +5,8 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from torchrir import MicrophoneArray, Room, Source, simulate_rir
+from torchrir import MicrophoneArray, Room, Source
+from torchrir.sim import simulate_rir
 from torchrir.signal import fft_convolve
 
 pra = pytest.importorskip("pyroomacoustics")

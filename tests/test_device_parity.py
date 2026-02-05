@@ -1,7 +1,8 @@
 import pytest
 import torch
 
-from torchrir import MicrophoneArray, Room, SimulationConfig, Source, simulate_rir
+from torchrir import MicrophoneArray, Room, SimulationConfig, Source
+from torchrir.sim import simulate_rir
 
 
 def _compute(device: str, cfg: SimulationConfig) -> torch.Tensor:
@@ -32,7 +33,7 @@ def _compute_dynamic(device: str, cfg: SimulationConfig) -> torch.Tensor:
         [mic_start + (mic_end - mic_start) * t / (steps - 1) for t in range(steps)],
         dim=0,
     ).unsqueeze(1)
-    from torchrir import simulate_dynamic_rir
+    from torchrir.sim import simulate_dynamic_rir
 
     drir = simulate_dynamic_rir(
         room=room,

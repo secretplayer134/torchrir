@@ -43,11 +43,11 @@ See the detailed overview: {doc}`overview`.
 
 ## Main features
 ### Static room acoustic simulation
-- Compute static RIRs with `simulate_rir`.
-- Convolve dry signals with `convolve_rir`.
+- Compute static RIRs with `torchrir.sim.simulate_rir`.
+- Convolve dry signals with `torchrir.signal.convolve_rir`.
 
 ### Dynamic room acoustic simulation
-- Compute time-varying RIRs with `simulate_dynamic_rir`.
+- Compute time-varying RIRs with `torchrir.sim.simulate_dynamic_rir`.
 - Convolve with `torchrir.signal.DynamicConvolver(mode="trajectory")`.
 
 ### Building dataset

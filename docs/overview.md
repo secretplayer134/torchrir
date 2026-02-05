@@ -44,7 +44,8 @@ device, dtype = DeviceSpec(device="auto").resolve()
   raise `NotImplementedError`.
 - Experimental dataset stubs (`torchrir.experimental`) are not implemented and raise
   `NotImplementedError`.
-- `simulate_rir`/`simulate_dynamic_rir` require `max_order` (or `SimulationConfig.max_order`) and either `nsample` or `tmax`.
+- `torchrir.sim.simulate_rir`/`torchrir.sim.simulate_dynamic_rir` require `max_order`
+  (or `SimulationConfig.max_order`) and either `nsample` or `tmax`.
 - Non-`omni` directivity requires orientation; mismatched shapes raise `ValueError`.
 - `beta` must have 4 (2D) or 6 (3D) elements; invalid sizes raise `ValueError`.
 - `simulate_dynamic_rir` requires `src_traj` and `mic_traj` to have matching time steps.

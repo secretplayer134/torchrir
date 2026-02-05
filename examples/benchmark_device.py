@@ -25,8 +25,6 @@ try:
         Source,
         get_logger,
         setup_logging,
-        simulate_dynamic_rir,
-        simulate_rir,
     )
 except ModuleNotFoundError:  # allow running without installation
     ROOT = Path(__file__).resolve().parents[1]
@@ -38,10 +36,9 @@ except ModuleNotFoundError:  # allow running without installation
         Source,
         get_logger,
         setup_logging,
-        simulate_dynamic_rir,
-        simulate_rir,
     )
 from torchrir.signal import DynamicConvolver
+from torchrir.sim import simulate_dynamic_rir, simulate_rir
 from torchrir.util import resolve_device
 
 

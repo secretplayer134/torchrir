@@ -1,14 +1,8 @@
 import torch
 import pytest
 
-from torchrir import (
-    MicrophoneArray,
-    Room,
-    SimulationConfig,
-    Source,
-    simulate_dynamic_rir,
-    simulate_rir,
-)
+from torchrir import MicrophoneArray, Room, SimulationConfig, Source
+from torchrir.sim import simulate_dynamic_rir, simulate_rir
 
 
 def test_simulate_rir_shape_and_peak():
