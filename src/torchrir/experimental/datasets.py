@@ -28,5 +28,5 @@ class TemplateDataset(BaseDataset):
     def __len__(self) -> int:
         raise NotImplementedError("TemplateDataset is not implemented yet")
 
-    def __getitem__(self, index: int) -> DatasetItem:
+    def __getitem__(self, idx) -> DatasetItem:
         raise NotImplementedError("TemplateDataset is not implemented yet")

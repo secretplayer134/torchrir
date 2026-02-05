@@ -15,7 +15,7 @@ def _has_matplotlib():
 
 @pytest.mark.skipif(not _has_matplotlib(), reason="matplotlib not installed")
 def test_plot_scene_static_and_dynamic():
-    from torchrir import plot_scene_dynamic, plot_scene_static
+    from torchrir.viz import plot_scene_dynamic, plot_scene_static
 
     room = Room.shoebox(size=[5.0, 4.0], fs=8000)
     sources = torch.tensor([[1.0, 1.0]])

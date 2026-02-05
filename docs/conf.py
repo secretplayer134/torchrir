@@ -57,7 +57,7 @@ def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
         return None
     modname = info.get("module")
     fullname = info.get("fullname")
-    if not modname:
+    if not modname or not fullname:
         return None
     try:
         mod = importlib.import_module(modname)

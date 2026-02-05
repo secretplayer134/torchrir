@@ -1,6 +1,11 @@
 """TorchRIR public API."""
 
-from .datasets import CmuArcticDataset, LibriSpeechDataset, collate_dataset_items, load_dataset_sources
+from .datasets import (
+    CmuArcticDataset,
+    LibriSpeechDataset,
+    collate_dataset_items,
+    load_dataset_sources,
+)
 from .infra import LoggingConfig, get_logger, setup_logging
 from .io import build_metadata, load_wav_mono, save_metadata_json, save_wav
 from .models import MicrophoneArray, RIRResult, Room, Scene, Source

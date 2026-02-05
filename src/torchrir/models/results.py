@@ -3,12 +3,14 @@ from __future__ import annotations
 """Result containers for simulation outputs."""
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from torch import Tensor
 
-from ..sim import SimulationConfig
 from .scene import Scene
+
+if TYPE_CHECKING:
+    from ..sim import SimulationConfig
 
 
 @dataclass(frozen=True)
@@ -23,6 +25,6 @@ class RIRResult:
 
     rirs: Tensor
     scene: Scene
-    config: SimulationConfig
+    config: "SimulationConfig"
     timestamps: Optional[Tensor] = None
     seed: Optional[int] = None

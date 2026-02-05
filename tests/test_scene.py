@@ -2,7 +2,6 @@ import pytest
 import torch
 
 from torchrir import (
-    ISMSimulator,
     MicrophoneArray,
     RIRResult,
     Room,
@@ -10,6 +9,7 @@ from torchrir import (
     SimulationConfig,
     Source,
 )
+from torchrir.sim import ISMSimulator
 
 
 def test_scene_validate_static():

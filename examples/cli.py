@@ -143,15 +143,15 @@ def _plot_gif(
     sources,
     mics,
     *,
-    src_traj=None,
-    mic_traj=None,
+    src_traj: torch.Tensor | None = None,
+    mic_traj: torch.Tensor | None = None,
     prefix="scene",
     signal_len: int | None = None,
     fs: float | None = None,
 ):
     if not args.gif:
         return
-    if src_traj is None and mic_traj is None:
+    if src_traj is None or mic_traj is None:
         return
     save_scene_gifs(
         out_dir=args.out_dir,

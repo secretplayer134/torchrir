@@ -19,7 +19,6 @@ class RIRSimulator(Protocol):
         """Run a simulation and return the result."""
 
 
-@dataclass(frozen=True)
 class ISMSimulator:
     """ISM-based simulator using the current core implementation.
 
@@ -57,6 +56,3 @@ class ISMSimulator:
                 config=cfg,
             )
         return RIRResult(rirs=rirs, scene=scene, config=cfg, seed=cfg.seed)
-
-
-@dataclass(frozen=True)

@@ -3,13 +3,16 @@ from __future__ import annotations
 """Output helpers for saving audio and metadata."""
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
 import logging
 
 from torch import Tensor
 
 from .audio import save_wav
 from .metadata import build_metadata, save_metadata_json
+
+if TYPE_CHECKING:
+    from ..models import MicrophoneArray, Room, Source
 
 
 def save_audio(
@@ -33,9 +36,9 @@ def save_metadata(
     *,
     out_dir: Path,
     metadata_name: str,
-    room: object,
-    sources: object,
-    mics: object,
+    room: "Room",
+    sources: "Source",
+    mics: "MicrophoneArray",
     rirs: Tensor,
     src_traj: Optional[Tensor] = None,
     mic_traj: Optional[Tensor] = None,
@@ -64,4 +67,3 @@ def save_metadata(
     if logger is not None:
         logger.info("saved: %s", meta_path)
     return metadata
-

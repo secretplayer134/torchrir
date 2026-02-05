@@ -28,7 +28,9 @@ def add_output_args(
             "--plot",
             action="store_true",
             default=plot_default,
-            help="Plot room layout and trajectories." if not plot_default else "Plot outputs (PNG).",
+            help="Plot room layout and trajectories."
+            if not plot_default
+            else "Plot outputs (PNG).",
         )
         if plot_default:
             parser.add_argument(
@@ -38,9 +40,13 @@ def add_output_args(
                 help="Disable plotting.",
             )
     if include_show:
-        parser.add_argument("--show", action="store_true", help="show plots interactively")
+        parser.add_argument(
+            "--show", action="store_true", help="show plots interactively"
+        )
     if include_gif:
-        parser.add_argument("--gif", action="store_true", help="Save trajectory animation GIF.")
+        parser.add_argument(
+            "--gif", action="store_true", help="Save trajectory animation GIF."
+        )
         parser.add_argument(
             "--gif-fps",
             type=int,
