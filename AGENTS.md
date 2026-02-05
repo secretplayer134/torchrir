@@ -36,7 +36,8 @@
   - Prefer parity tests across `cpu`, `cuda`, and `mps` where available.
 
 ## Commit & Pull Request Guidelines
-- Recommended commit style: short, imperative subject (e.g., `Add ISM core implementation`).
+- Codex proposes commit message drafts; the user reviews/approves before committing.
+- All commits must follow Conventional Commits via Commitizen (use `uv run cz commit`).
 - Pull requests should include:
   - A concise summary of changes
   - Any linked issues or design notes
@@ -44,7 +45,7 @@
 
 ## Versioning & Releases
 - Use Commitizen for version bumps, tagging, and changelog updates.
-  - Run: `uv run commitizen bump --changelog --yes`
+  - Run: `uv run cz bump --changelog --yes`
   - Version comes from `pyproject.toml` (PEP 621) and tag format is `vX.Y.Z`.
 - After bumping, push commits and tags (`git push origin main --tags`).
 - Signed tags are created manually by the user. Example:
