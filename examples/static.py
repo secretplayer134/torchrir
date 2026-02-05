@@ -1,17 +1,20 @@
 from __future__ import annotations
 
-"""Static CMU ARCTIC example (fixed sources + fixed binaural mic).
+"""Static CMU ARCTIC example (fixed sources + fixed mic array).
 
 This script:
 1) Loads random CMU ARCTIC utterances for multiple speakers.
-2) Samples fixed source positions and a binaural microphone in a shoebox room.
+2) Samples fixed source positions and a mic array in a shoebox room.
 3) Simulates static RIRs with ISM and convolves the dry signals.
-4) Saves the binaural mixture and JSON metadata, optionally plots the scene.
+4) Saves the convolved mixture and JSON metadata, optionally plots the scene.
 
 Outputs (default `--out-dir outputs`):
-- static_binaural.wav
-- static_binaural_metadata.json
-- optional plots under the same directory
+- static.wav
+- static_ref01.wav, static_ref02.wav, ... (per-source convolved references)
+- static_metadata.json
+- optional plots and GIFs under the same directory
+  - static_static_2d.png (and static_static_3d.png if 3D)
+  - static.gif (and static_3d.gif if 3D)
 """
 
 import argparse
@@ -39,13 +42,15 @@ from torchrir.io import save_scene_audio, save_scene_metadata
 from torchrir.signal import convolve_rir
 from torchrir.sim import simulate_rir
 from torchrir.util import add_output_args, resolve_device
-from torchrir.viz import save_scene_plots
+from torchrir.viz import save_scene_gifs, save_scene_plots
+
+MIC_SPACING = 0.08
 
 
 def main() -> None:
     """Run the static CMU ARCTIC simulation and save audio + metadata."""
     parser = argparse.ArgumentParser(
-        description="Static RIR: fixed sources and binaural mic"
+        description="Static RIR: fixed sources and a fixed mic array"
     )
     parser.add_argument(
         "--dataset-dir",
@@ -70,6 +75,12 @@ def main() -> None:
         type=int,
         default=2,
         help="Number of source speakers to mix.",
+    )
+    parser.add_argument(
+        "--num-mics",
+        type=int,
+        default=2,
+        help="Number of microphones in the fixed array.",
     )
     parser.add_argument(
         "--duration",
@@ -143,13 +154,20 @@ def main() -> None:
         center=mic_center,
         min_distance=1.5,
     )
-    mic_pos = arrays.binaural_array(mic_center)
+    if args.num_mics <= 0:
+        raise ValueError("num_mics must be positive")
+    if args.num_mics == 2:
+        mic_pos = arrays.binaural_array(mic_center, offset=MIC_SPACING)
+    else:
+        mic_pos = arrays.linear_array(
+            mic_center, num=args.num_mics, spacing=MIC_SPACING, axis=0
+        )
     mic_pos = sampling.clamp_positions(mic_pos, room_size)
 
     sources = Source.from_positions(sources_pos.tolist())
     mics = MicrophoneArray.from_positions(mic_pos.tolist())
 
-    # Optional static plot.
+    # Optional static plot/GIF.
     if args.plot:
         save_scene_plots(
             out_dir=args.out_dir,
@@ -158,6 +176,21 @@ def main() -> None:
             mics=mics,
             prefix="static",
             show=args.show,
+            logger=logger,
+        )
+        src_traj = sources_pos.unsqueeze(0)
+        mic_traj = mic_pos.unsqueeze(0)
+        save_scene_gifs(
+            out_dir=args.out_dir,
+            room=room.size,
+            sources=sources,
+            mics=mics,
+            src_traj=src_traj,
+            mic_traj=mic_traj,
+            prefix="static",
+            signal_len=signals.shape[1],
+            fs=fs,
+            gif_fps=-1,
             logger=logger,
         )
 
@@ -173,17 +206,40 @@ def main() -> None:
 
     y_static = convolve_rir(signals, rirs)
 
+    # Save per-source reference audio (convolved with its own RIR).
+    reference_audio = []
+    for src_idx in range(args.num_sources):
+        ref = convolve_rir(signals[src_idx], rirs[src_idx : src_idx + 1])
+        ref_name = f"static_ref{src_idx + 1:02d}.wav"
+        save_scene_audio(
+            out_dir=args.out_dir,
+            audio=ref,
+            fs=fs,
+            audio_name=ref_name,
+            logger=logger,
+        )
+        speaker, utterances = info[src_idx]
+        reference_audio.append(
+            {
+                "index": src_idx,
+                "filename": ref_name,
+                "speaker": speaker,
+                "utterances": utterances,
+                "kind": "convolved",
+            }
+        )
+
     # Save outputs (audio + metadata).
     save_scene_audio(
         out_dir=args.out_dir,
         audio=y_static,
         fs=fs,
-        audio_name="static_binaural.wav",
+        audio_name="static.wav",
         logger=logger,
     )
     metadata = save_scene_metadata(
         out_dir=args.out_dir,
-        metadata_name="static_binaural_metadata.json",
+        metadata_name="static_metadata.json",
         room=room,
         sources=sources,
         mics=mics,
@@ -192,7 +248,7 @@ def main() -> None:
         mic_traj=None,
         signal_len=signals.shape[1],
         source_info=info,
-        extra={"mode": "static"},
+        extra={"mode": "static", "reference_audio": reference_audio},
         logger=logger,
     )
 

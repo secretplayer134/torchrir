@@ -14,7 +14,7 @@ pip install torchrir
 ```
 
 ## Examples
-- `examples/static.py`: fixed sources/mics with binaural output.  
+- `examples/static.py`: fixed sources/mics with configurable mic count (default: binaural).  
   `uv run python examples/static.py --plot`
 - `examples/dynamic_src.py`: moving sources, fixed mics.  
   `uv run python examples/dynamic_src.py --plot`

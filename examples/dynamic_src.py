@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-"""Dynamic CMU ARCTIC example (moving sources + fixed binaural mic).
+"""Dynamic CMU ARCTIC example (moving sources + fixed mic array).
 
 This script:
 1) Loads random CMU ARCTIC utterances for multiple speakers.
-2) Samples a fixed binaural mic and generates moving source trajectories.
+2) Samples a fixed mic array and generates moving source trajectories.
 3) Simulates dynamic RIRs with ISM and convolves the dry signals.
-4) Saves the binaural mixture and JSON metadata, optionally plots/animates.
+4) Saves the mixture and JSON metadata, optionally plots/animates.
 
 Outputs (default `--out-dir outputs`):
-- dynamic_src_binaural.wav
-- dynamic_src_binaural_metadata.json
+- dynamic_src.wav
+- dynamic_src_ref01.wav, dynamic_src_ref02.wav, ... (per-source convolved references)
+- dynamic_src_metadata.json
 - optional plots and GIFs under the same directory
 """
 
@@ -41,11 +42,13 @@ from torchrir.sim import simulate_dynamic_rir
 from torchrir.util import add_output_args, resolve_device
 from torchrir.viz import save_scene_gifs, save_scene_plots
 
+MIC_SPACING = 0.08
+
 
 def main() -> None:
     """Run the dynamic-source CMU ARCTIC simulation."""
     parser = argparse.ArgumentParser(
-        description="Dynamic RIR: moving sources, fixed binaural mic"
+        description="Dynamic RIR: moving sources, fixed mic array"
     )
     parser.add_argument(
         "--dataset-dir",
@@ -70,6 +73,12 @@ def main() -> None:
         type=int,
         default=2,
         help="Number of source speakers to mix.",
+    )
+    parser.add_argument(
+        "--num-mics",
+        type=int,
+        default=2,
+        help="Number of microphones in the fixed array.",
     )
     parser.add_argument(
         "--num-moving-sources",
@@ -111,7 +120,7 @@ def main() -> None:
         parser,
         out_dir_default="outputs",
         plot_default=False,
-        include_gif=True,
+        include_gif=False,
     )
     parser.add_argument("--log-level", type=str, default="INFO", help="Log level.")
     args = parser.parse_args()
@@ -146,7 +155,14 @@ def main() -> None:
     mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
         0
     )
-    mic_pos = arrays.binaural_array(mic_center)
+    if args.num_mics <= 0:
+        raise ValueError("num_mics must be positive")
+    if args.num_mics == 2:
+        mic_pos = arrays.binaural_array(mic_center, offset=MIC_SPACING)
+    else:
+        mic_pos = arrays.linear_array(
+            mic_center, num=args.num_mics, spacing=MIC_SPACING, axis=0
+        )
     mic_pos = sampling.clamp_positions(mic_pos, room_size)
     steps = max(2, args.steps)
     mic_traj = mic_pos.unsqueeze(0).repeat(steps, 1, 1)
@@ -197,7 +213,6 @@ def main() -> None:
             show=args.show,
             logger=logger,
         )
-    if args.gif:
         save_scene_gifs(
             out_dir=args.out_dir,
             room=room.size,
@@ -208,7 +223,7 @@ def main() -> None:
             prefix="dynamic_src",
             signal_len=signals.shape[1],
             fs=fs,
-            gif_fps=int(args.gif_fps),
+            gif_fps=-1,
             logger=logger,
         )
 
@@ -222,19 +237,43 @@ def main() -> None:
         device=device,
     )
 
-    y_dynamic = DynamicConvolver(mode="trajectory").convolve(signals, rirs)
+    convolver = DynamicConvolver(mode="trajectory")
+    y_dynamic = convolver.convolve(signals, rirs)
+
+    # Save per-source reference audio (convolved with its own RIR).
+    reference_audio = []
+    for src_idx in range(args.num_sources):
+        ref = convolver.convolve(signals[src_idx], rirs[:, src_idx : src_idx + 1])
+        ref_name = f"dynamic_src_ref{src_idx + 1:02d}.wav"
+        save_scene_audio(
+            out_dir=args.out_dir,
+            audio=ref,
+            fs=fs,
+            audio_name=ref_name,
+            logger=logger,
+        )
+        speaker, utterances = info[src_idx]
+        reference_audio.append(
+            {
+                "index": src_idx,
+                "filename": ref_name,
+                "speaker": speaker,
+                "utterances": utterances,
+                "kind": "convolved",
+            }
+        )
 
     # Save outputs (audio + metadata).
     save_scene_audio(
         out_dir=args.out_dir,
         audio=y_dynamic,
         fs=fs,
-        audio_name="dynamic_src_binaural.wav",
+        audio_name="dynamic_src.wav",
         logger=logger,
     )
     metadata = save_scene_metadata(
         out_dir=args.out_dir,
-        metadata_name="dynamic_src_binaural_metadata.json",
+        metadata_name="dynamic_src_metadata.json",
         room=room,
         sources=sources,
         mics=mics,
@@ -243,7 +282,7 @@ def main() -> None:
         mic_traj=mic_traj,
         signal_len=signals.shape[1],
         source_info=info,
-        extra={"mode": "dynamic_src"},
+        extra={"mode": "dynamic_src", "reference_audio": reference_audio},
         logger=logger,
     )
 
