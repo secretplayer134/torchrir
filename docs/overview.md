@@ -13,6 +13,7 @@
 - Dataset utilities (CMU ARCTIC, LibriSpeech, template stubs) plus DataLoader collate helpers.
 - Plotting utilities for static/dynamic scenes and GIF animation.
 - Metadata export helpers for time axis, DOA, array attributes, and trajectories (JSON-ready).
+- Dataset examples can emit per-source reference audio (RIR-convolved premix) and record it in metadata.
 - Unified CLI example with JSON/YAML config and deterministic flag support.
 
 ## Module layout

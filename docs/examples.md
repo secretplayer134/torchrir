@@ -183,6 +183,7 @@ You can choose CMU ARCTIC or LibriSpeech from the command line.
 For each scene index `k`:
 
 - `scene_k.wav` — binaural mixture
+- `scene_k_refXX.wav` — per-source reference audio after RIR convolution (premix)
 - `scene_k_metadata.json` — room size, trajectories, DOA, array attributes, etc.
 - `scene_k_static_2d.png` / `scene_k_dynamic_2d.png` — layout plots
   (3D variants are saved when the room is 3D)
@@ -257,6 +258,8 @@ The example is implemented in `examples/build_dynamic_dataset.py` and uses:
 - `torchrir.sim.simulate_dynamic_rir` to generate the dynamic RIR sequence.
 - `torchrir.signal.DynamicConvolver(mode="trajectory")` to produce the final mixture.
 - `save_scene_audio` + `save_scene_metadata` to store scene metadata (kept as separate calls).
+  Metadata includes a `reference_audio` list describing the saved `scene_k_refXX.wav` files
+  (each entry corresponds to a single source convolved with its dynamic RIR).
 
 ### Additional example
 

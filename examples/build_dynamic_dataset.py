@@ -15,6 +15,7 @@ Key characteristics:
 
 Outputs (per scene index k):
     - scene_k.wav
+    - scene_k_refXX.wav (per-source convolved references)
     - scene_k_metadata.json
     - scene_k_static_2d.png / scene_k_dynamic_2d.png (and 3D variants when enabled)
 
@@ -28,6 +29,7 @@ Notes:
     - Use --num-moving-sources to keep some sources fixed.
     - Plotting is opt-in via --plot.
     - Downloading is automatic if data is missing (can also be requested via --download).
+    - Reference outputs are per-source, RIR-convolved signals (premix).
 """
 
 import argparse
@@ -344,32 +346,32 @@ def main() -> None:
         # Use the initial positions for scene bookkeeping (trajectory is used for RIRs).
         sources = Source.from_positions(src_traj[0].tolist())
 
-    if args.plot:
-        prefix = f"scene_{idx:03d}"
-        save_scene_plots(
-            out_dir=args.out_dir,
-            room=room.size,
-            sources=sources,
-            mics=mics,
-            src_traj=src_traj,
-            mic_traj=mic_traj,
-            prefix=prefix,
-            show=False,
-            logger=logger,
-        )
-        save_scene_gifs(
-            out_dir=args.out_dir,
-            room=room.size,
-            sources=sources,
-            mics=mics,
-            src_traj=src_traj,
-            mic_traj=mic_traj,
-            prefix=prefix,
-            signal_len=signals.shape[1],
-            fs=fs,
-            gif_fps=-1,
-            logger=logger,
-        )
+        if args.plot:
+            prefix = f"scene_{idx:03d}"
+            save_scene_plots(
+                out_dir=args.out_dir,
+                room=room.size,
+                sources=sources,
+                mics=mics,
+                src_traj=src_traj,
+                mic_traj=mic_traj,
+                prefix=prefix,
+                show=False,
+                logger=logger,
+            )
+            save_scene_gifs(
+                out_dir=args.out_dir,
+                room=room.size,
+                sources=sources,
+                mics=mics,
+                src_traj=src_traj,
+                mic_traj=mic_traj,
+                prefix=prefix,
+                signal_len=signals.shape[1],
+                fs=fs,
+                gif_fps=-1,
+                logger=logger,
+            )
 
         # ISM simulation + dynamic convolution.
         rirs = simulate_dynamic_rir(
@@ -380,7 +382,31 @@ def main() -> None:
             tmax=args.tmax,
             device=device,
         )
-        y = DynamicConvolver(mode="trajectory").convolve(signals, rirs)
+        convolver = DynamicConvolver(mode="trajectory")
+        y = convolver.convolve(signals, rirs)
+
+        # Save per-source reference audio before mixing.
+        reference_audio = []
+        for src_idx in range(args.num_sources):
+            ref = convolver.convolve(signals[src_idx], rirs[:, src_idx : src_idx + 1])
+            ref_name = f"scene_{idx:03d}_ref{src_idx + 1:02d}.wav"
+            save_scene_audio(
+                out_dir=args.out_dir,
+                audio=ref,
+                fs=fs,
+                audio_name=ref_name,
+                logger=logger,
+            )
+            speaker, utterances = info[src_idx]
+            reference_audio.append(
+                {
+                    "index": src_idx,
+                    "filename": ref_name,
+                    "speaker": speaker,
+                    "utterances": utterances,
+                    "kind": "convolved",
+                }
+            )
 
         # Save mixture audio and JSON metadata per scene.
         save_scene_audio(
@@ -407,6 +433,7 @@ def main() -> None:
                 "subset": args.subset if args.dataset == "librispeech" else None,
                 "motion_modes": modes,
                 "moving_sources": moving,
+                "reference_audio": reference_audio,
                 "args": _serialize_args(args),
             },
             logger=logger,
