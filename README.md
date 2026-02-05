@@ -2,6 +2,10 @@
 
 PyTorch-based room impulse response (RIR) simulation toolkit focused on a clean, modern API with GPU support.
 This project has been substantially assisted by AI using Codex.
+TorchRIR is under active development and may contain bugs or breaking changes.
+Please validate results for your use case.
+If you find bugs or have feature requests, please open an issue.
+Contributions are welcome.
 
 ## Installation
 ```bash
@@ -65,3 +69,4 @@ For detailed documentation, see the docs under `docs/` and Read the Docs.
 - [pyroomacoustics](https://github.com/LCAV/pyroomacoustics)
 - [das-generator](https://github.com/ehabets/das-generator)
 - [rir-generator](https://github.com/audiolabs/rir-generator)
+- [pyrato](https://github.com/pyfar/pyrato)
