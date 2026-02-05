@@ -19,6 +19,7 @@
   - `uv run sphinx-build -b html docs docs/_build/html` to build docs locally
   - `uv run ruff format .` for formatting
   - `uv run ty check` for type checking
+- `uv.lock` is committed. Update it **only** when `pyproject.toml` changes.
 
 ## Coding Style & Naming Conventions
 - Prefer Python for core implementation, with PyTorch used for computation.
@@ -43,10 +44,11 @@
 
 ## Versioning & Releases
 - Use Commitizen for version bumps, tagging, and changelog updates.
-  - Run: `uv run python -m commitizen bump --changelog --yes`
-  - Use `--gpg-sign` if you want Commitizen to create a signed tag.
+  - Run: `uv run commitizen bump --changelog --yes`
   - Version comes from `pyproject.toml` (PEP 621) and tag format is `vX.Y.Z`.
 - After bumping, push commits and tags (`git push origin main --tags`).
+- Signed tags are created manually by the user. Example:
+  - `git tag -s vX.Y.Z -m "vX.Y.Z"`
 
 ## Security & Configuration Tips
 - Avoid committing large audio files or datasets; prefer documented download steps.
