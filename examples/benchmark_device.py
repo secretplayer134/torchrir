@@ -19,7 +19,6 @@ import torch
 
 try:
     from torchrir import (
-        DynamicConvolver,
         LoggingConfig,
         MicrophoneArray,
         Room,
@@ -33,7 +32,6 @@ except ModuleNotFoundError:  # allow running without installation
     ROOT = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(ROOT / "src"))
     from torchrir import (
-        DynamicConvolver,
         LoggingConfig,
         MicrophoneArray,
         Room,
@@ -43,6 +41,7 @@ except ModuleNotFoundError:  # allow running without installation
         simulate_dynamic_rir,
         simulate_rir,
     )
+from torchrir.signal import DynamicConvolver
 from torchrir.util import resolve_device
 
 

@@ -31,7 +31,6 @@ import torch
 
 try:
     from torchrir import (
-        DynamicConvolver,
         LoggingConfig,
         MicrophoneArray,
         Room,
@@ -44,7 +43,6 @@ except ModuleNotFoundError:  # allow running without installation
     ROOT = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(ROOT / "src"))
     from torchrir import (
-        DynamicConvolver,
         LoggingConfig,
         MicrophoneArray,
         Room,
@@ -61,6 +59,7 @@ if str(EXAMPLES_DIR) not in sys.path:
 from torchrir.datasets import LibriSpeechDataset, load_dataset_sources
 from torchrir.geometry import arrays, sampling, trajectories
 from torchrir.io import save_audio, save_metadata
+from torchrir.signal import DynamicConvolver
 from torchrir.util import add_output_args, resolve_device
 from torchrir.viz import save_scene_plots
 

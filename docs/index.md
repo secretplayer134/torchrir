@@ -48,7 +48,7 @@ See the detailed overview: {doc}`overview`.
 
 ### Dynamic room acoustic simulation
 - Compute time-varying RIRs with `simulate_dynamic_rir`.
-- Convolve with `DynamicConvolver(mode="trajectory")`.
+- Convolve with `torchrir.signal.DynamicConvolver(mode="trajectory")`.
 
 ### Building dataset
 - Use `torchrir.datasets.load_dataset_sources` to build fixed-length sources.

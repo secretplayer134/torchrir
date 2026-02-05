@@ -5,7 +5,7 @@
 - Directivity patterns (`omni`, `cardioid`, `hypercardioid`, `subcardioid`, `bidir`)
   with per-source/mic orientation handling.
 - Acoustic parameters via `beta` or `t60` (Sabine), optional diffuse tail via `tdiff`.
-- Dynamic convolution via `DynamicConvolver` (`trajectory` or `hop` modes).
+- Dynamic convolution via `torchrir.signal.DynamicConvolver` (`trajectory` or `hop` modes).
 - CPU/CUDA/MPS execution with optional `torch.compile` acceleration for ISM accumulation
   (when enabled; MPS disables LUT).
 - Standard array geometries (linear, circular, polyhedron, binaural, Eigenmike)

@@ -215,7 +215,7 @@ The example is implemented in `examples/cmu_arctic_dynamic_dataset.py` and uses:
 
 - `torchrir.datasets.load_dataset_sources` to build fixed-length signals from multiple utterances.
 - `simulate_dynamic_rir` to generate the dynamic RIR sequence.
-- `DynamicConvolver(mode="trajectory")` to produce the final mixture.
+- `torchrir.signal.DynamicConvolver(mode="trajectory")` to produce the final mixture.
 - `save_audio` + `save_metadata` to store scene metadata (kept as separate calls).
 
 ### Additional example

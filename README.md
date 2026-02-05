@@ -31,7 +31,7 @@ pip install torchrir
 - Geometry: `Room`, `Source`, `MicrophoneArray`
 - Static RIR: `simulate_rir`
 - Dynamic RIR: `simulate_dynamic_rir`
-- Dynamic convolution: `DynamicConvolver`
+- Dynamic convolution: `torchrir.signal.DynamicConvolver`
 - Metadata export: `build_metadata`, `save_metadata_json`
 
 ## Module Layout (for contributors)
@@ -45,7 +45,8 @@ pip install torchrir
 - `torchrir.infra`: logging utilities
 
 ```python
-from torchrir import DynamicConvolver, MicrophoneArray, Room, Source, simulate_rir
+from torchrir import MicrophoneArray, Room, Source, simulate_rir
+from torchrir.signal import DynamicConvolver
 
 room = Room.shoebox(size=[6.0, 4.0, 3.0], fs=16000, beta=[0.9] * 6)
 sources = Source.from_positions([[1.0, 2.0, 1.5]])

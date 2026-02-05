@@ -6,5 +6,4 @@ from .static import convolve_rir, fft_convolve
 __all__ = [
     "DynamicConvolver",
     "convolve_rir",
-    "fft_convolve",
 ]
