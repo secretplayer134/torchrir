@@ -136,10 +136,10 @@ def main() -> None:
         size=args.room, fs=fs, beta=[0.9] * (6 if len(args.room) == 3 else 4)
     )
 
-    src_start = sampling.sample_positions(
+    src_start = sampling.sample_positions_with_z_range(
         num=args.num_sources, room_size=room_size, rng=rng
     )
-    src_end = sampling.sample_positions(
+    src_end = sampling.sample_positions_with_z_range(
         num=args.num_sources, room_size=room_size, rng=rng
     )
     steps = max(2, args.steps)

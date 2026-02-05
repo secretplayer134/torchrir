@@ -73,12 +73,18 @@ def _random_trajectory(
     mode = rng.choice(["linear", "zigzag"])
     if mode == "linear":
         # Straight line from start to a random end point.
-        end = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
+        end = sampling.sample_positions_with_z_range(
+            num=1, room_size=room_size, rng=rng
+        ).squeeze(0)
         traj = trajectories.linear_trajectory(start, end, steps)
         return traj, mode
     # Zigzag motion via a random mid point.
-    mid = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    end = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
+    mid = sampling.sample_positions_with_z_range(
+        num=1, room_size=room_size, rng=rng
+    ).squeeze(0)
+    end = sampling.sample_positions_with_z_range(
+        num=1, room_size=room_size, rng=rng
+    ).squeeze(0)
     split = max(2, steps // 2)
     first = trajectories.linear_trajectory(start, mid, split)
     second = trajectories.linear_trajectory(mid, end, steps - split + 1)
@@ -94,7 +100,9 @@ def _build_source_trajectories(
     rng: random.Random,
 ) -> tuple[torch.Tensor, List[str]]:
     # Sample a start for each source, then generate a trajectory per source.
-    starts = sampling.sample_positions(num=num_sources, room_size=room_size, rng=rng)
+    starts = sampling.sample_positions_with_z_range(
+        num=num_sources, room_size=room_size, rng=rng
+    )
     trajs: List[torch.Tensor] = []
     modes: List[str] = []
     for idx in range(num_sources):

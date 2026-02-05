@@ -27,6 +27,28 @@ def sample_positions(
     return torch.tensor(coords, dtype=torch.float32)
 
 
+def sample_positions_with_z_range(
+    *,
+    num: int,
+    room_size: Tensor,
+    rng: random.Random,
+    z_range: tuple[float, float] = (1.5, 1.8),
+    margin: float = 0.5,
+) -> Tensor:
+    """Sample random positions with an explicit z-range constraint."""
+    positions = sample_positions(num=num, room_size=room_size, rng=rng, margin=margin)
+    if room_size.numel() < 3:
+        return positions
+    z_min, z_max = z_range
+    z_low = max(margin, float(z_min))
+    z_high = min(float(room_size[2].item()) - margin, float(z_max))
+    if z_high <= z_low:
+        return positions
+    z_vals = [rng.uniform(z_low, z_high) for _ in range(num)]
+    positions[:, 2] = torch.tensor(z_vals, dtype=positions.dtype)
+    return positions
+
+
 def clamp_positions(
     positions: Tensor, room_size: Tensor, margin: float = 0.1
 ) -> Tensor:

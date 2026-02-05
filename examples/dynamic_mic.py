@@ -136,7 +136,7 @@ def main() -> None:
         size=args.room, fs=fs, beta=[0.9] * (6 if len(args.room) == 3 else 4)
     )
 
-    sources_pos = sampling.sample_positions(
+    sources_pos = sampling.sample_positions_with_z_range(
         num=args.num_sources, room_size=room_size, rng=rng
     )
     mic_center_start = sampling.sample_positions(
