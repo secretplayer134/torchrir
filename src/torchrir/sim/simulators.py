@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from .config import SimulationConfig, default_config
-from .core import simulate_dynamic_rir, simulate_rir
+from .ism import simulate_dynamic_rir, simulate_rir
 from ..models import RIRResult, Scene
 
 
