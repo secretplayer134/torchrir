@@ -43,7 +43,8 @@
 
 ## Versioning & Releases
 - Use Commitizen for version bumps, tagging, and changelog updates.
-  - Run: `uv run cz bump --changelog --tag`
+  - Run: `uv run python -m commitizen bump --changelog --yes`
+  - Use `--gpg-sign` if you want Commitizen to create a signed tag.
   - Version comes from `pyproject.toml` (PEP 621) and tag format is `vX.Y.Z`.
 - After bumping, push commits and tags (`git push origin main --tags`).
 
