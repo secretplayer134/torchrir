@@ -17,6 +17,8 @@
   - `uv run pytest` to run tests
   - `uv build` / `uv publish` for releases (must still support `pip install torchrir`)
   - `uv run sphinx-build -b html docs docs/_build/html` to build docs locally
+  - `uv run ruff format .` for formatting
+  - `uv run ty check` for type checking
 
 ## Coding Style & Naming Conventions
 - Prefer Python for core implementation, with PyTorch used for computation.
