@@ -4,7 +4,7 @@ from .sim import SimulationConfig, default_config, simulate_dynamic_rir, simulat
 from .signal import DynamicConvolver
 from .logging_utils import LoggingConfig, get_logger, setup_logging
 from .viz import animate_scene_gif
-from .metadata import build_metadata, save_metadata_json
+from .io import build_metadata, save_metadata_json
 from .viz import plot_scene_dynamic, plot_scene_static, plot_scene_and_save
 from .models import MicrophoneArray, RIRResult, Room, Scene, Source
 from .sim import FDTDSimulator, ISMSimulator, RIRSimulator, RayTracingSimulator
@@ -24,9 +24,9 @@ from .datasets import (
     load_dataset_sources,
     TemplateDataset,
     TemplateSentence,
-    load_wav_mono,
-    save_wav,
 )
+from .io import load_wav_mono, save_wav
+from . import io, models, sim, signal, viz
 from . import geometry
 from .utils import (
     att2t_SabineEstimation,
@@ -78,6 +78,11 @@ __all__ = [
     "TemplateDataset",
     "TemplateSentence",
     "geometry",
+    "io",
+    "models",
+    "sim",
+    "signal",
+    "viz",
     "plot_scene_dynamic",
     "plot_scene_and_save",
     "plot_scene_static",

@@ -12,7 +12,7 @@ from typing import List, Tuple
 import torch
 
 from .base import BaseDataset
-from .utils import load_wav_mono
+from ..io.audio import load_wav_mono
 
 BASE_URL = "http://www.festvox.org/cmu_arctic/packed"
 VALID_SPEAKERS = {
@@ -192,17 +192,3 @@ def _parse_text_line(line: str) -> Tuple[str, str]:
     utterance = left.replace("(", "").strip().split()[0]
     text = right.rsplit('"', 1)[0]
     return utterance, text
-
-
-def save_wav(path: Path, audio: torch.Tensor, sample_rate: int) -> None:
-    """Save a mono or multi-channel wav to disk.
-
-    Example:
-        >>> save_wav(Path("outputs/example.wav"), audio, sample_rate)
-    """
-    import soundfile as sf
-
-    audio = audio.detach().cpu().clamp(-1.0, 1.0).to(torch.float32)
-    if audio.ndim == 2 and audio.shape[0] <= 8:
-        audio = audio.transpose(0, 1)
-    sf.write(str(path), audio.numpy(), sample_rate)

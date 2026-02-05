@@ -1,17 +1,13 @@
 """Dataset helpers for torchrir."""
 
 from .base import BaseDataset, DatasetItem, SentenceLike
-from .utils import choose_speakers, load_dataset_sources, load_wav_mono
+from .utils import choose_speakers, load_dataset_sources
+from ..io.audio import load_wav_mono, save_wav
 from .collate import CollateBatch, collate_dataset_items
 from .template import TemplateDataset, TemplateSentence
 from .librispeech import LibriSpeechDataset, LibriSpeechSentence
 
-from .cmu_arctic import (
-    CmuArcticDataset,
-    CmuArcticSentence,
-    list_cmu_arctic_speakers,
-    save_wav,
-)
+from .cmu_arctic import CmuArcticDataset, CmuArcticSentence, list_cmu_arctic_speakers
 
 __all__ = [
     "BaseDataset",

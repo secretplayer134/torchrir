@@ -12,7 +12,7 @@ from typing import List, Tuple
 import torch
 
 from .base import BaseDataset
-from .utils import load_wav_mono
+from ..io.audio import load_wav_mono
 
 BASE_URL = "https://www.openslr.org/resources/12"
 VALID_SUBSETS = {
