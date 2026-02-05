@@ -96,12 +96,17 @@ def _build_source_trajectories(
     *,
     num_sources: int,
     room_size: torch.Tensor,
+    mic_center: torch.Tensor,
     steps: int,
     rng: random.Random,
 ) -> tuple[torch.Tensor, List[str]]:
     # Sample a start for each source, then generate a trajectory per source.
-    starts = sampling.sample_positions_with_z_range(
-        num=num_sources, room_size=room_size, rng=rng
+    starts = sampling.sample_positions_min_distance(
+        num=num_sources,
+        room_size=room_size,
+        rng=rng,
+        center=mic_center,
+        min_distance=1.5,
     )
     trajs: List[torch.Tensor] = []
     modes: List[str] = []
@@ -240,6 +245,7 @@ def main() -> None:
         src_traj, modes = _build_source_trajectories(
             num_sources=args.num_sources,
             room_size=room_size,
+            mic_center=mic_center,
             steps=steps,
             rng=scene_rng,
         )

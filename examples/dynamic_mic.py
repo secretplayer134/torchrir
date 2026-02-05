@@ -136,15 +136,21 @@ def main() -> None:
         size=args.room, fs=fs, beta=[0.9] * (6 if len(args.room) == 3 else 4)
     )
 
-    sources_pos = sampling.sample_positions_with_z_range(
-        num=args.num_sources, room_size=room_size, rng=rng
-    )
     mic_center_start = sampling.sample_positions(
         num=1, room_size=room_size, rng=rng
     ).squeeze(0)
     mic_center_end = sampling.sample_positions(
         num=1, room_size=room_size, rng=rng
     ).squeeze(0)
+    if room_size.numel() == 3:
+        mic_center_end[2] = mic_center_start[2]
+    sources_pos = sampling.sample_positions_min_distance(
+        num=args.num_sources,
+        room_size=room_size,
+        rng=rng,
+        center=mic_center_start,
+        min_distance=1.5,
+    )
     steps = max(2, args.steps)
     mic_center_traj = trajectories.linear_trajectory(
         mic_center_start, mic_center_end, steps

@@ -276,11 +276,15 @@ def _run_static(args, rng: random.Random, logger):
     room_size = torch.tensor(args.room, dtype=torch.float32)
 
     # Sample fixed source and mic positions.
-    sources_pos = sampling.sample_positions_with_z_range(
-        num=args.num_sources, room_size=room_size, rng=rng
-    )
     mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
         0
+    )
+    sources_pos = sampling.sample_positions_min_distance(
+        num=args.num_sources,
+        room_size=room_size,
+        rng=rng,
+        center=mic_center,
+        min_distance=1.5,
     )
     mic_pos = sampling.clamp_positions(arrays.binaural_array(mic_center), room_size)
 
@@ -354,8 +358,18 @@ def _run_dynamic_src(args, rng: random.Random, logger):
 
     steps = max(2, args.steps)
     # Build linear trajectories for each source; mic is fixed.
-    src_start = sampling.sample_positions_with_z_range(
-        num=args.num_sources, room_size=room_size, rng=rng
+    mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
+        0
+    )
+    mic_pos = sampling.clamp_positions(arrays.binaural_array(mic_center), room_size)
+    mic_traj = mic_pos.unsqueeze(0).repeat(steps, 1, 1).to(device)
+
+    src_start = sampling.sample_positions_min_distance(
+        num=args.num_sources,
+        room_size=room_size,
+        rng=rng,
+        center=mic_center,
+        min_distance=1.5,
     )
     src_end = sampling.sample_positions_with_z_range(
         num=args.num_sources, room_size=room_size, rng=rng
@@ -368,12 +382,6 @@ def _run_dynamic_src(args, rng: random.Random, logger):
         dim=1,
     )
     src_traj = sampling.clamp_positions(src_traj, room_size).to(device)
-
-    mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
-        0
-    )
-    mic_pos = sampling.clamp_positions(arrays.binaural_array(mic_center), room_size)
-    mic_traj = mic_pos.unsqueeze(0).repeat(steps, 1, 1).to(device)
 
     sources = Source.from_positions(src_start.tolist())
     mics = MicrophoneArray.from_positions(mic_pos.tolist())
@@ -449,9 +457,6 @@ def _run_dynamic_mic(args, rng: random.Random, logger):
     room_size = torch.tensor(args.room, dtype=torch.float32)
 
     # Fixed source positions; mic follows a linear path.
-    sources_pos = sampling.sample_positions_with_z_range(
-        num=args.num_sources, room_size=room_size, rng=rng
-    )
     steps = max(2, args.steps)
     mic_center_start = sampling.sample_positions(
         num=1, room_size=room_size, rng=rng
@@ -459,6 +464,13 @@ def _run_dynamic_mic(args, rng: random.Random, logger):
     mic_center_end = sampling.sample_positions(
         num=1, room_size=room_size, rng=rng
     ).squeeze(0)
+    sources_pos = sampling.sample_positions_min_distance(
+        num=args.num_sources,
+        room_size=room_size,
+        rng=rng,
+        center=mic_center_start,
+        min_distance=1.5,
+    )
     mic_center_traj = trajectories.linear_trajectory(
         mic_center_start, mic_center_end, steps
     )

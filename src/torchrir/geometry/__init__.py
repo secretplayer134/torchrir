@@ -12,7 +12,11 @@ from .arrays import (
     linear_array,
     polyhedron_array,
 )
-from .sampling import clamp_positions, sample_positions
+from .sampling import (
+    clamp_positions,
+    sample_positions,
+    sample_positions_min_distance,
+)
 from .trajectories import linear_trajectory
 
 __all__ = [
@@ -25,4 +29,5 @@ __all__ = [
     "linear_trajectory",
     "polyhedron_array",
     "sample_positions",
+    "sample_positions_min_distance",
 ]

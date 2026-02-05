@@ -133,11 +133,15 @@ def main() -> None:
         size=args.room, fs=fs, beta=[0.9] * (6 if len(args.room) == 3 else 4)
     )
 
-    sources_pos = sampling.sample_positions_with_z_range(
-        num=args.num_sources, room_size=room_size, rng=rng
-    )
     mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
         0
+    )
+    sources_pos = sampling.sample_positions_min_distance(
+        num=args.num_sources,
+        room_size=room_size,
+        rng=rng,
+        center=mic_center,
+        min_distance=1.5,
     )
     mic_pos = arrays.binaural_array(mic_center)
     mic_pos = sampling.clamp_positions(mic_pos, room_size)
