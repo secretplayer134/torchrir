@@ -3,7 +3,7 @@ name = "torchrir"
 version = "0.4.1"
 description = "PyTorch-based room impulse response (RIR) simulation toolkit for static and dynamic scenes."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "numpy>=2.2.6",
     "torch>=2.10.0",
