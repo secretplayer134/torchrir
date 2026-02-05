@@ -32,7 +32,7 @@ pip install torchrir
 - Static RIR: `torchrir.sim.simulate_rir`
 - Dynamic RIR: `torchrir.sim.simulate_dynamic_rir`
 - Dynamic convolution: `torchrir.signal.DynamicConvolver`
-- Metadata export: `build_metadata`, `save_metadata_json`
+- Metadata export: `torchrir.io.build_metadata`, `torchrir.io.save_metadata_json`
 
 ## Module Layout (for contributors)
 - `torchrir.sim`: simulation backends (ISM implementation lives under `torchrir.sim.ism`)
