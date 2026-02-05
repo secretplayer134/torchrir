@@ -44,9 +44,11 @@ from torchrir import (
     binaural_mic_positions,
     clamp_positions,
     load_dataset_sources,
+    collate_dataset_items,
     sample_positions,
 )
 import random
+from torch.utils.data import DataLoader
 
 def dataset_factory(speaker: str | None):
     spk = speaker or "bdl"
@@ -58,9 +60,25 @@ signals, fs, info = load_dataset_sources(
     duration_s=10.0,
     rng=random.Random(0),
 )
+
+dataset = CmuArcticDataset("datasets/cmu_arctic", speaker="bdl", download=True)
+loader = DataLoader(dataset, batch_size=4, collate_fn=collate_dataset_items)
 ```
 
 `TemplateDataset` provides a minimal stub for future dataset integrations.
+
+### LibriSpeech example
+```python
+from pathlib import Path
+from torchrir import LibriSpeechDataset
+
+dataset = LibriSpeechDataset(
+    Path("datasets/librispeech"),
+    subset="train-clean-100",
+    download=True,
+)
+audio, fs = dataset.load_wav("103-1240-0000")
+```
 
 ## Logging
 ```python

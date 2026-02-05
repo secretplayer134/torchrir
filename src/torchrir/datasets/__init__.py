@@ -2,6 +2,7 @@
 
 from .base import BaseDataset, DatasetItem, SentenceLike
 from .utils import choose_speakers, load_dataset_sources, load_wav_mono
+from .collate import CollateBatch, collate_dataset_items
 from .template import TemplateDataset, TemplateSentence
 from .librispeech import LibriSpeechDataset, LibriSpeechSentence
 
@@ -18,6 +19,8 @@ __all__ = [
     "CmuArcticSentence",
     "choose_speakers",
     "DatasetItem",
+    "CollateBatch",
+    "collate_dataset_items",
     "list_cmu_arctic_speakers",
     "SentenceLike",
     "load_dataset_sources",
