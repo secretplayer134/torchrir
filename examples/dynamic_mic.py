@@ -51,7 +51,8 @@ except ModuleNotFoundError:  # allow running without installation
 EXAMPLES_DIR = Path(__file__).resolve().parent
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
-from torchrir import clamp_positions, linear_trajectory, load_dataset_sources, sample_positions
+from torchrir.geometry import arrays, sampling, trajectories
+from torchrir import load_dataset_sources
 
 
 def main() -> None:
@@ -104,16 +105,24 @@ def main() -> None:
         size=args.room, fs=fs, beta=[0.9] * (6 if len(args.room) == 3 else 4)
     )
 
-    sources_pos = sample_positions(num=args.num_sources, room_size=room_size, rng=rng)
-    mic_center_start = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    mic_center_end = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
+    sources_pos = sampling.sample_positions(
+        num=args.num_sources, room_size=room_size, rng=rng
+    )
+    mic_center_start = sampling.sample_positions(
+        num=1, room_size=room_size, rng=rng
+    ).squeeze(0)
+    mic_center_end = sampling.sample_positions(
+        num=1, room_size=room_size, rng=rng
+    ).squeeze(0)
     steps = max(2, args.steps)
-    mic_center_traj = linear_trajectory(mic_center_start, mic_center_end, steps)
+    mic_center_traj = trajectories.linear_trajectory(
+        mic_center_start, mic_center_end, steps
+    )
     mic_traj = torch.stack(
-        [MicrophoneArray.binaural(center).positions for center in mic_center_traj],
+        [arrays.binaural_array(center) for center in mic_center_traj],
         dim=0,
     )
-    mic_traj = clamp_positions(mic_traj, room_size)
+    mic_traj = sampling.clamp_positions(mic_traj, room_size)
 
     src_traj = sources_pos.unsqueeze(0).repeat(steps, 1, 1)
 

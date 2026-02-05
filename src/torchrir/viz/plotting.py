@@ -7,8 +7,8 @@ from typing import Any, Iterable, Optional, Sequence, Tuple
 import torch
 from torch import Tensor
 
-from .room import MicrophoneArray, Room, Source
-from .utils import as_tensor, ensure_dim
+from ..models import MicrophoneArray, Room, Source
+from ..utils import as_tensor, ensure_dim
 
 
 def plot_scene_static(

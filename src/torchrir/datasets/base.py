@@ -47,7 +47,9 @@ class BaseDataset(Dataset[DatasetItem]):
     def __len__(self) -> int:
         return len(self._get_sentences())
 
-    def __getitem__(self, idx: int) -> DatasetItem:
+    def __getitem__(self, idx) -> DatasetItem:  # ty: ignore[invalid-method-override]
+        if not isinstance(idx, int):
+            raise TypeError(f"Index must be int, got {type(idx)!r}")
         sentences = self._get_sentences()
         sentence = sentences[idx]
         audio, sample_rate = self.load_wav(sentence.utterance_id)

@@ -79,9 +79,7 @@ class LibriSpeechDataset(BaseDataset):
                 f"{self.root}"
             )
         if self._speaker_dir is not None and not self._speaker_dir.exists():
-            raise FileNotFoundError(
-                f"speaker directory not found: {self._speaker_dir}"
-            )
+            raise FileNotFoundError(f"speaker directory not found: {self._speaker_dir}")
 
     def list_speakers(self) -> List[str]:
         """Return available speaker IDs."""

@@ -11,8 +11,7 @@ from typing import Protocol
 
 from .config import SimulationConfig, default_config
 from .core import simulate_dynamic_rir, simulate_rir
-from .results import RIRResult
-from .scene import Scene
+from ..models import RIRResult, Scene
 
 
 class RIRSimulator(Protocol):

@@ -49,7 +49,8 @@ except ModuleNotFoundError:  # allow running without installation
 EXAMPLES_DIR = Path(__file__).resolve().parent
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
-from torchrir import clamp_positions, load_dataset_sources, sample_positions
+from torchrir.geometry import arrays, sampling
+from torchrir import load_dataset_sources
 
 
 def main() -> None:
@@ -97,10 +98,14 @@ def main() -> None:
         size=args.room, fs=fs, beta=[0.9] * (6 if len(args.room) == 3 else 4)
     )
 
-    sources_pos = sample_positions(num=args.num_sources, room_size=room_size, rng=rng)
-    mic_center = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    mic_pos = MicrophoneArray.binaural(mic_center).positions
-    mic_pos = clamp_positions(mic_pos, room_size)
+    sources_pos = sampling.sample_positions(
+        num=args.num_sources, room_size=room_size, rng=rng
+    )
+    mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
+        0
+    )
+    mic_pos = arrays.binaural_array(mic_center)
+    mic_pos = sampling.clamp_positions(mic_pos, room_size)
 
     sources = Source.from_positions(sources_pos.tolist())
     mics = MicrophoneArray.from_positions(mic_pos.tolist())

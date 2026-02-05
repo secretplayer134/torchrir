@@ -11,8 +11,8 @@ from torch import Tensor
 
 from .config import SimulationConfig, default_config
 from .directivity import directivity_gain, split_directivity
-from .room import MicrophoneArray, Room, Source
-from .utils import (
+from ..models import MicrophoneArray, Room, Source
+from ..utils import (
     as_tensor,
     ensure_dim,
     estimate_beta_from_t60,
@@ -224,7 +224,7 @@ def simulate_dynamic_rir(
 
     Example:
         >>> room = Room.shoebox(size=[6.0, 4.0, 3.0], fs=16000, beta=[0.9] * 6)
-        >>> from torchrir import linear_trajectory
+        >>> from torchrir.geometry import linear_trajectory
         >>> src_traj = torch.stack(
         ...     [linear_trajectory(torch.tensor([1.0, 2.0, 1.5]),
         ...                        torch.tensor([4.0, 2.0, 1.5]), 8)],
@@ -327,7 +327,9 @@ def simulate_dynamic_rir(
 
     n_src = src_traj.shape[1]
     n_mic = mic_traj.shape[1]
-    rirs = torch.zeros((src_traj.shape[0], n_src, n_mic, nsample), device=device, dtype=dtype)
+    rirs = torch.zeros(
+        (src_traj.shape[0], n_src, n_mic, nsample), device=device, dtype=dtype
+    )
     fdl = cfg.frac_delay_length
     fdl2 = (fdl - 1) // 2
     img_chunk = cfg.image_chunk_size

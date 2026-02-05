@@ -39,9 +39,7 @@ try:
         Room,
         Source,
         build_metadata,
-        clamp_positions,
         get_logger,
-        linear_trajectory,
         load_dataset_sources,
         plot_scene_and_save,
         resolve_device,
@@ -61,9 +59,7 @@ except ModuleNotFoundError:  # allow running without installation
         Room,
         Source,
         build_metadata,
-        clamp_positions,
         get_logger,
-        linear_trajectory,
         load_dataset_sources,
         plot_scene_and_save,
         resolve_device,
@@ -77,7 +73,7 @@ EXAMPLES_DIR = Path(__file__).resolve().parent
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
 
-from torchrir import sample_positions
+from torchrir.geometry import arrays, sampling, trajectories
 
 
 def _dataset_factory(
@@ -98,15 +94,15 @@ def _random_trajectory(
     mode = rng.choice(["linear", "zigzag"])
     if mode == "linear":
         # Straight line from start to a random end point.
-        end = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-        traj = linear_trajectory(start, end, steps)
+        end = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
+        traj = trajectories.linear_trajectory(start, end, steps)
         return traj, mode
     # Zigzag motion via a random mid point.
-    mid = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    end = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
+    mid = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
+    end = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
     split = max(2, steps // 2)
-    first = linear_trajectory(start, mid, split)
-    second = linear_trajectory(mid, end, steps - split + 1)
+    first = trajectories.linear_trajectory(start, mid, split)
+    second = trajectories.linear_trajectory(mid, end, steps - split + 1)
     traj = torch.cat([first[:-1], second], dim=0)
     return traj, mode
 
@@ -119,7 +115,7 @@ def _build_source_trajectories(
     rng: random.Random,
 ) -> tuple[torch.Tensor, List[str]]:
     # Sample a start for each source, then generate a trajectory per source.
-    starts = sample_positions(num=num_sources, room_size=room_size, rng=rng)
+    starts = sampling.sample_positions(num=num_sources, room_size=room_size, rng=rng)
     trajs: List[torch.Tensor] = []
     modes: List[str] = []
     for idx in range(num_sources):
@@ -133,7 +129,7 @@ def _build_source_trajectories(
         modes.append(mode)
     # Stack to (T, n_src, dim) and keep positions inside the room.
     src_traj = torch.stack(trajs, dim=1)
-    src_traj = clamp_positions(src_traj, room_size)
+    src_traj = sampling.clamp_positions(src_traj, room_size)
     return src_traj, modes
 
 
@@ -169,8 +165,10 @@ def main() -> None:
     )
 
     rng = random.Random(args.seed)
-    mic_center = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    mic_pos = clamp_positions(MicrophoneArray.binaural(mic_center).positions, room_size)
+    mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
+        0
+    )
+    mic_pos = sampling.clamp_positions(arrays.binaural_array(mic_center), room_size)
     mics = MicrophoneArray.from_positions(mic_pos.tolist())
 
     args.out_dir.mkdir(parents=True, exist_ok=True)

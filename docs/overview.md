@@ -39,13 +39,8 @@ device, dtype = DeviceSpec(device="auto").resolve()
 
 ## Dataset utilities
 ```python
-from torchrir import (
-    CmuArcticDataset,
-    clamp_positions,
-    load_dataset_sources,
-    collate_dataset_items,
-    sample_positions,
-)
+from torchrir import CmuArcticDataset, collate_dataset_items, load_dataset_sources
+from torchrir.geometry import clamp_positions, sample_positions
 import random
 from torch.utils.data import DataLoader
 

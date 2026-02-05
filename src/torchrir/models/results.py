@@ -7,7 +7,7 @@ from typing import Optional
 
 from torch import Tensor
 
-from .config import SimulationConfig
+from ..sim import SimulationConfig
 from .scene import Scene
 
 

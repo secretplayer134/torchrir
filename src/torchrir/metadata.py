@@ -10,7 +10,7 @@ import json
 import torch
 from torch import Tensor
 
-from .room import MicrophoneArray, Room, Source
+from .models import MicrophoneArray, Room, Source
 
 
 @dataclass(frozen=True)

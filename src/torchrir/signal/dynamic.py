@@ -12,7 +12,7 @@ from typing import Optional
 import torch
 from torch import Tensor
 
-from .signal import _ensure_dynamic_rirs, _ensure_signal
+from .convolution import _ensure_dynamic_rirs, _ensure_signal
 
 
 @dataclass(frozen=True)
@@ -50,7 +50,7 @@ class DynamicConvolver:
 
 
 def _convolve_dynamic_hop(signal: Tensor, rirs: Tensor, hop: int) -> Tensor:
-    from .signal import _convolve_dynamic_rir_hop
+    from .convolution import _convolve_dynamic_rir_hop
 
     signal = _ensure_signal(signal)
     rirs = _ensure_dynamic_rirs(rirs, signal)
@@ -64,7 +64,7 @@ def _convolve_dynamic_trajectory(
     timestamps: Optional[Tensor],
     fs: Optional[float],
 ) -> Tensor:
-    from .signal import _convolve_dynamic_rir_trajectory
+    from .convolution import _convolve_dynamic_rir_trajectory
 
     signal = _ensure_signal(signal)
     rirs = _ensure_dynamic_rirs(rirs, signal)

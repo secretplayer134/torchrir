@@ -56,7 +56,8 @@ EXAMPLES_DIR = Path(__file__).resolve().parent
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
 
-from torchrir import clamp_positions, linear_trajectory, load_dataset_sources, sample_positions
+from torchrir.geometry import arrays, sampling, trajectories
+from torchrir import load_dataset_sources
 
 
 def _dataset_factory(root: Path, download: bool, speaker: str | None):
@@ -269,9 +270,13 @@ def _run_static(args, rng: random.Random, logger):
     )
     room_size = torch.tensor(args.room, dtype=torch.float32)
 
-    sources_pos = sample_positions(num=args.num_sources, room_size=room_size, rng=rng)
-    mic_center = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    mic_pos = clamp_positions(MicrophoneArray.binaural(mic_center).positions, room_size)
+    sources_pos = sampling.sample_positions(
+        num=args.num_sources, room_size=room_size, rng=rng
+    )
+    mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
+        0
+    )
+    mic_pos = sampling.clamp_positions(arrays.binaural_array(mic_center), room_size)
 
     sources = Source.from_positions(sources_pos.tolist())
     mics = MicrophoneArray.from_positions(mic_pos.tolist())
@@ -334,19 +339,25 @@ def _run_dynamic_src(args, rng: random.Random, logger):
     room_size = torch.tensor(args.room, dtype=torch.float32)
 
     steps = max(2, args.steps)
-    src_start = sample_positions(num=args.num_sources, room_size=room_size, rng=rng)
-    src_end = sample_positions(num=args.num_sources, room_size=room_size, rng=rng)
+    src_start = sampling.sample_positions(
+        num=args.num_sources, room_size=room_size, rng=rng
+    )
+    src_end = sampling.sample_positions(
+        num=args.num_sources, room_size=room_size, rng=rng
+    )
     src_traj = torch.stack(
         [
-            linear_trajectory(src_start[i], src_end[i], steps)
+            trajectories.linear_trajectory(src_start[i], src_end[i], steps)
             for i in range(args.num_sources)
         ],
         dim=1,
     )
-    src_traj = clamp_positions(src_traj, room_size).to(device)
+    src_traj = sampling.clamp_positions(src_traj, room_size).to(device)
 
-    mic_center = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    mic_pos = clamp_positions(MicrophoneArray.binaural(mic_center).positions, room_size)
+    mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
+        0
+    )
+    mic_pos = sampling.clamp_positions(arrays.binaural_array(mic_center), room_size)
     mic_traj = mic_pos.unsqueeze(0).repeat(steps, 1, 1).to(device)
 
     sources = Source.from_positions(src_start.tolist())
@@ -414,15 +425,23 @@ def _run_dynamic_mic(args, rng: random.Random, logger):
     )
     room_size = torch.tensor(args.room, dtype=torch.float32)
 
-    sources_pos = sample_positions(num=args.num_sources, room_size=room_size, rng=rng)
-    steps = max(2, args.steps)
-    mic_center_start = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    mic_center_end = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    mic_center_traj = linear_trajectory(mic_center_start, mic_center_end, steps)
-    mic_traj = torch.stack(
-        [MicrophoneArray.binaural(center).positions for center in mic_center_traj], dim=0
+    sources_pos = sampling.sample_positions(
+        num=args.num_sources, room_size=room_size, rng=rng
     )
-    mic_traj = clamp_positions(mic_traj, room_size).to(device)
+    steps = max(2, args.steps)
+    mic_center_start = sampling.sample_positions(
+        num=1, room_size=room_size, rng=rng
+    ).squeeze(0)
+    mic_center_end = sampling.sample_positions(
+        num=1, room_size=room_size, rng=rng
+    ).squeeze(0)
+    mic_center_traj = trajectories.linear_trajectory(
+        mic_center_start, mic_center_end, steps
+    )
+    mic_traj = torch.stack(
+        [arrays.binaural_array(center) for center in mic_center_traj], dim=0
+    )
+    mic_traj = sampling.clamp_positions(mic_traj, room_size).to(device)
 
     src_traj = sources_pos.unsqueeze(0).repeat(steps, 1, 1).to(device)
 

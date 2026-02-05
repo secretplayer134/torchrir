@@ -1,17 +1,13 @@
 """TorchRIR public API."""
 
-from .config import SimulationConfig, default_config
-from .core import simulate_dynamic_rir, simulate_rir
-from .dynamic import DynamicConvolver
+from .sim import SimulationConfig, default_config, simulate_dynamic_rir, simulate_rir
+from .signal import DynamicConvolver
 from .logging_utils import LoggingConfig, get_logger, setup_logging
-from .animation import animate_scene_gif
+from .viz import animate_scene_gif
 from .metadata import build_metadata, save_metadata_json
-from .plotting import plot_scene_dynamic, plot_scene_static
-from .plotting_utils import plot_scene_and_save
-from .room import MicrophoneArray, Room, Source
-from .scene import Scene
-from .results import RIRResult
-from .simulators import FDTDSimulator, ISMSimulator, RIRSimulator, RayTracingSimulator
+from .viz import plot_scene_dynamic, plot_scene_static, plot_scene_and_save
+from .models import MicrophoneArray, RIRResult, Room, Scene, Source
+from .sim import FDTDSimulator, ISMSimulator, RIRSimulator, RayTracingSimulator
 from .signal import convolve_rir, fft_convolve
 from .datasets import (
     BaseDataset,
@@ -31,7 +27,7 @@ from .datasets import (
     load_wav_mono,
     save_wav,
 )
-from .scene_utils import clamp_positions, linear_trajectory, sample_positions
+from . import geometry
 from .utils import (
     att2t_SabineEstimation,
     att2t_sabine_estimation,
@@ -81,9 +77,7 @@ __all__ = [
     "load_wav_mono",
     "TemplateDataset",
     "TemplateSentence",
-    "clamp_positions",
-    "linear_trajectory",
-    "sample_positions",
+    "geometry",
     "plot_scene_dynamic",
     "plot_scene_and_save",
     "plot_scene_static",

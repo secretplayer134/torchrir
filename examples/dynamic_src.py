@@ -51,7 +51,8 @@ except ModuleNotFoundError:  # allow running without installation
 EXAMPLES_DIR = Path(__file__).resolve().parent
 if str(EXAMPLES_DIR) not in sys.path:
     sys.path.insert(0, str(EXAMPLES_DIR))
-from torchrir import clamp_positions, linear_trajectory, load_dataset_sources, sample_positions
+from torchrir.geometry import arrays, sampling, trajectories
+from torchrir import load_dataset_sources
 
 
 def main() -> None:
@@ -104,21 +105,27 @@ def main() -> None:
         size=args.room, fs=fs, beta=[0.9] * (6 if len(args.room) == 3 else 4)
     )
 
-    src_start = sample_positions(num=args.num_sources, room_size=room_size, rng=rng)
-    src_end = sample_positions(num=args.num_sources, room_size=room_size, rng=rng)
+    src_start = sampling.sample_positions(
+        num=args.num_sources, room_size=room_size, rng=rng
+    )
+    src_end = sampling.sample_positions(
+        num=args.num_sources, room_size=room_size, rng=rng
+    )
     steps = max(2, args.steps)
     src_traj = torch.stack(
         [
-            linear_trajectory(src_start[i], src_end[i], steps)
+            trajectories.linear_trajectory(src_start[i], src_end[i], steps)
             for i in range(args.num_sources)
         ],
         dim=1,
     )
-    src_traj = clamp_positions(src_traj, room_size)
+    src_traj = sampling.clamp_positions(src_traj, room_size)
 
-    mic_center = sample_positions(num=1, room_size=room_size, rng=rng).squeeze(0)
-    mic_pos = MicrophoneArray.binaural(mic_center).positions
-    mic_pos = clamp_positions(mic_pos, room_size)
+    mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
+        0
+    )
+    mic_pos = arrays.binaural_array(mic_center)
+    mic_pos = sampling.clamp_positions(mic_pos, room_size)
     mic_traj = mic_pos.unsqueeze(0).repeat(steps, 1, 1)
 
     sources = Source.from_positions(src_start.tolist())
