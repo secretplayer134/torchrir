@@ -72,6 +72,12 @@ def main() -> None:
         help="Number of source speakers to mix.",
     )
     parser.add_argument(
+        "--num-moving-sources",
+        type=int,
+        default=1,
+        help="Number of sources that move (others stay fixed).",
+    )
+    parser.add_argument(
         "--duration",
         type=float,
         default=10.0,
@@ -136,29 +142,41 @@ def main() -> None:
         size=args.room, fs=fs, beta=[0.9] * (6 if len(args.room) == 3 else 4)
     )
 
-    src_start = sampling.sample_positions_with_z_range(
-        num=args.num_sources, room_size=room_size, rng=rng
-    )
-    src_end = sampling.sample_positions_with_z_range(
-        num=args.num_sources, room_size=room_size, rng=rng
-    )
-    steps = max(2, args.steps)
-    src_traj = torch.stack(
-        [
-            trajectories.linear_trajectory(src_start[i], src_end[i], steps)
-            for i in range(args.num_sources)
-        ],
-        dim=1,
-    )
-    src_traj = sampling.clamp_positions(src_traj, room_size)
-
     # Fixed binaural mic (trajectory is constant).
     mic_center = sampling.sample_positions(num=1, room_size=room_size, rng=rng).squeeze(
         0
     )
     mic_pos = arrays.binaural_array(mic_center)
     mic_pos = sampling.clamp_positions(mic_pos, room_size)
+    steps = max(2, args.steps)
     mic_traj = mic_pos.unsqueeze(0).repeat(steps, 1, 1)
+
+    src_start = sampling.sample_positions_min_distance(
+        num=args.num_sources,
+        room_size=room_size,
+        rng=rng,
+        center=mic_center,
+        min_distance=1.5,
+    )
+    src_end = sampling.sample_positions_with_z_range(
+        num=args.num_sources, room_size=room_size, rng=rng
+    )
+    if room_size.numel() == 3:
+        src_end[:, 2] = src_start[:, 2]
+    num_moving = min(args.num_sources, max(1, args.num_moving_sources))
+    moving_indices = set(rng.sample(range(args.num_sources), k=num_moving))
+    src_traj = torch.stack(
+        [
+            (
+                trajectories.linear_trajectory(src_start[i], src_end[i], steps)
+                if i in moving_indices
+                else src_start[i].unsqueeze(0).repeat(steps, 1)
+            )
+            for i in range(args.num_sources)
+        ],
+        dim=1,
+    )
+    src_traj = sampling.clamp_positions(src_traj, room_size)
 
     sources = Source.from_positions(src_start.tolist())
     mics = MicrophoneArray.from_positions(mic_pos.tolist())
