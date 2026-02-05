@@ -2,7 +2,7 @@
 
 from .sim import SimulationConfig, default_config, simulate_dynamic_rir, simulate_rir
 from .signal import DynamicConvolver
-from .logging_utils import LoggingConfig, get_logger, setup_logging
+from .infra import LoggingConfig, get_logger, setup_logging
 from .viz import animate_scene_gif
 from .io import build_metadata, save_metadata_json
 from .viz import plot_scene_dynamic, plot_scene_static, plot_scene_and_save
@@ -26,7 +26,7 @@ from .datasets import (
     TemplateSentence,
 )
 from .io import load_wav_mono, save_wav
-from . import io, models, sim, signal, viz
+from . import infra, io, models, sim, signal, viz
 from . import geometry
 from .utils import (
     att2t_SabineEstimation,
@@ -78,6 +78,7 @@ __all__ = [
     "TemplateDataset",
     "TemplateSentence",
     "geometry",
+    "infra",
     "io",
     "models",
     "sim",
