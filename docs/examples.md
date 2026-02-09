@@ -148,6 +148,11 @@ This script times static ISM and optional dynamic trajectory simulation.
 - `--gpu`: `cuda`, `mps`, or `auto`.
 - `--dynamic`: benchmark dynamic trajectory path as well.
 
+```{note}
+In this project, CUDA behavior is currently not validated.
+Use CPU/MPS for confirmed paths.
+```
+
 ### Example runs
 
 ```bash
@@ -255,6 +260,10 @@ uv run python examples/build_dynamic_dataset.py \
 - `--plot`: enable plotting + GIFs (default: off).
 - `--download`: download the dataset if missing (default: off; auto-downloads when data is absent).
 - `--device`: cpu/cuda/mps/auto.
+
+```{note}
+`cuda` is available as an option, but CUDA behavior is currently not validated.
+```
 
 ### Implementation notes
 

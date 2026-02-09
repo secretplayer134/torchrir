@@ -8,26 +8,25 @@ This page summarizes implementation-level differences between TorchRIR and relat
 
 ## Dynamic Simulation Feature Comparison
 
-| Library | Dynamic RIR generation | Many dynamic sources at once | GPU/CPU support | Visualization |
+| Feature | `torchrir` | `gpuRIR` | `pyroomacoustics` | `rir-generator` |
 |---|---|---|---|---|
-| `torchrir` | Yes (`simulate_dynamic_rir`) | Yes (`(T, n_src, n_mic, nsample)` + multi-source dynamic convolution) | CPU / CUDA / MPS | Built-in static/dynamic plotting and GIF helpers (`torchrir.viz`) |
-| `gpuRIR` | Yes (trajectory points via `simulateRIR`) | Partial (multi-source RIRs are supported, but trajectory filtering is centered on one moving source signal per call) | CUDA GPU (no general CPU backend for core RIR simulation) | No built-in visualization API (examples use external plotting) |
-| `rir-generator` | No (static RIR only) | No | CPU (C/C++ core via CFFI) | No built-in visualization API |
-| `pyroomacoustics` | Partial (static RIR pipeline; dynamic motion typically requires manual chunking/recomputing) | No native API for many dynamic trajectories simultaneously | CPU (Python + C++ acceleration) | Built-in room/RIR plotting (`Room.plot`, `Room.plot_rir`) |
+| 🎯 Dynamic Sources | ✅ | 🟡 Single-source workflow | 🟡 Manual loop | ❌ |
+| 🎤 Dynamic Microphones | ✅ | ❌ | 🟡 Manual loop | ❌ |
+| 🖥️ CPU | ✅ | ❌ | ✅ | ✅ |
+| 🧮 CUDA | 🚧 Coming soon | ✅ | ❌ | ❌ |
+| 🍎 MPS | ✅ | ❌ | ❌ | ❌ |
+| 📊 Visualization | ✅ | ❌ | ✅ | ❌ |
+| 🗂️ Dataset Build | ✅ | ❌ | 🟡 Custom scripts | ❌ |
 
-Notes:
-- The table focuses on native APIs for moving-source/moving-microphone simulation workflows.
-- "Partial" means feasible with extra user-side orchestration rather than a dedicated end-to-end dynamic API.
+Legend:
+- `✅` native support
+- `🟡` manual setup
+- `🚧` coming soon
+- `❌` unavailable
 
 ## ISM High-Pass Filter (HPF) Implementations
 
 This section focuses on libraries (in this comparison scope) that implement a built-in HPF for ISM-generated RIRs: `torchrir`, `rir-generator`, and `pyroomacoustics`.
-
-| Library | HPF design | Cutoff / parameter decision | Application method |
-|---|---|---|---|
-| `torchrir` | Configurable IIR high-pass designed by `scipy.signal.iirfilter` (SOS) | Default parameters are aligned with `pyroomacoustics`: `f_c=10.0` Hz, `n=2`, `rp=5.0`, `rs=60.0`, `type="butter"`; normalized cutoff `w_c = 2 f_c / f_s` | Zero-phase `sosfiltfilt` on generated RIR tensors (last axis) |
-| `rir-generator` | Allen and Berkley-style recursive HPF | Fixed cutoff `f_c = 100` Hz, mapped with sampling frequency `f_s` | One-pass recursive filtering on generated RIR samples |
-| `pyroomacoustics` | Configurable IIR high-pass designed by `scipy.signal.iirfilter` (SOS) | User/global parameters `(f_c, n, rp, rs, type)`, with normalized cutoff `w_c = 2 f_c / f_s` | Zero-phase `sosfiltfilt` on each generated RIR |
 
 ### `torchrir`: parameterization and equations
 

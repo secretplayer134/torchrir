@@ -73,5 +73,31 @@ For detailed documentation, see the docs under `docs/` and Read the Docs.
 - [pyroomacoustics](https://github.com/LCAV/pyroomacoustics)
 - [rir-generator](https://github.com/audiolabs/rir-generator)
 
-## Comparisons
-- Library comparison notes (dynamic RIR capabilities and ISM HPF implementation details) are documented in `docs/comparisons.md`.
+## Related Library Comparison (Quick View)
+
+### Dynamic Simulation
+| Feature | `torchrir` | `gpuRIR` | `pyroomacoustics` | `rir-generator` |
+|---|---|---|---|---|
+| 🎯 Dynamic Sources | ✅ | 🟡 Single-source workflow | 🟡 Manual loop | ❌ |
+| 🎤 Dynamic Microphones | ✅ | ❌ | 🟡 Manual loop | ❌ |
+| 🖥️ CPU | ✅ | ❌ | ✅ | ✅ |
+| 🧮 CUDA | 🚧 Coming soon | ✅ | ❌ | ❌ |
+| 🍎 MPS | ✅ | ❌ | ❌ | ❌ |
+| 📊 Visualization | ✅ | ❌ | ✅ | ❌ |
+| 🗂️ Dataset Build | ✅ | ❌ | 🟡 Custom scripts | ❌ |
+
+### ISM HPF (RIR High-Pass Filter)
+| Library | Built-in HPF | Method |
+|---|---|---|
+| `torchrir` | ✅ | IIR, zero-phase |
+| `gpuRIR` | ❌ | No built-in HPF |
+| `rir-generator` | ✅ | Allen & Berkley-style recursive HPF |
+| `pyroomacoustics` | ✅ | IIR, zero-phase |
+
+Legend:
+- `✅` native support
+- `🟡` manual setup
+- `🚧` coming soon
+- `❌` unavailable
+
+Detailed notes and equations: `docs/comparisons.md`.

@@ -6,7 +6,7 @@
   with per-source/mic orientation handling.
 - Acoustic parameters via `beta` or `t60` (Sabine), optional diffuse tail via `tdiff`.
 - Dynamic convolution via `torchrir.signal.DynamicConvolver` (`trajectory` or `hop` modes).
-- CPU/CUDA/MPS execution with optional `torch.compile` acceleration for ISM accumulation
+- CPU/MPS execution with optional `torch.compile` acceleration for ISM accumulation
   (when enabled; MPS disables LUT).
 - Standard array geometries (linear, circular, polyhedron, binaural, Eigenmike)
   and trajectory sampling utilities.
@@ -33,9 +33,9 @@
 
 ## Device selection
 - `device="cpu"`: CPU execution
-- `device="cuda"`: NVIDIA GPU (CUDA) if available, otherwise fallback to CPU
 - `device="mps"`: Apple Silicon GPU via Metal (MPS) if available, otherwise fallback to CPU
-- `device="auto"`: prefer CUDA → MPS → CPU
+- `device="cuda"`: CUDA code path exists but is not yet validated in this project
+- `device="auto"`: backend is selected by internal priority
 
 ```python
 from torchrir import DeviceSpec
@@ -63,7 +63,7 @@ device, dtype = DeviceSpec(device="auto").resolve()
 
 ## Specification (current)
 ### Purpose
-- Provide room impulse response (RIR) simulation on PyTorch with CPU/CUDA/MPS support.
+- Provide room impulse response (RIR) simulation on PyTorch with CPU/MPS support.
 - Support static and dynamic scenes with a maintainable, modern API.
 
 ### Room model
