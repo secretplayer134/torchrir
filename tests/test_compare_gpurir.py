@@ -13,6 +13,15 @@ except Exception:
     gpurir = None
 
 
+def _configure_gpurir_for_comparison() -> None:
+    if gpurir is None:
+        return
+    if hasattr(gpurir, "activateLUT"):
+        gpurir.activateLUT(False)
+    if hasattr(gpurir, "activateMixedPrecision"):
+        gpurir.activateMixedPrecision(False)
+
+
 def _align_by_xcorr(
     a: torch.Tensor, b: torch.Tensor
 ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -104,6 +113,7 @@ def test_static_rir_close_to_gpurir():
         pytest.skip("CUDA not available")
     if gpurir is None:
         pytest.skip("gpuRIR not installed")
+    _configure_gpurir_for_comparison()
 
     fs = 16000
     room_dim = [6.0, 4.0, 3.0]
@@ -153,6 +163,7 @@ def test_dynamic_rir_close_to_gpurir():
         pytest.skip("CUDA not available")
     if gpurir is None:
         pytest.skip("gpuRIR not installed")
+    _configure_gpurir_for_comparison()
 
     fs = 16000
     room_dim = [6.0, 4.0, 3.0]
@@ -164,9 +175,14 @@ def test_dynamic_rir_close_to_gpurir():
     src_end = torch.tensor([2.5, 2.0, 1.2], dtype=torch.float32)
     alpha = torch.linspace(0.0, 1.0, steps, dtype=torch.float32).unsqueeze(1)
     src_path = src_start + (src_end - src_start) * alpha
-    mic = [3.0, 2.0, 1.2]
-    src_traj = src_path.unsqueeze(1)
-    mic_traj = torch.tensor(mic, dtype=torch.float32).unsqueeze(0).repeat(steps, 1).unsqueeze(1)
+    fixed_mic_position = [3.0, 2.0, 1.2]
+    moving_source_traj_for_torchrir = src_path.unsqueeze(1)
+    fixed_mic_traj_for_torchrir = (
+        torch.tensor(fixed_mic_position, dtype=torch.float32)
+        .unsqueeze(0)
+        .repeat(steps, 1)
+        .unsqueeze(1)
+    )
 
     # gpuRIR dynamic comparison is intentionally limited to one moving source
     # with a fixed microphone, which is the supported/straightforward setup.
@@ -174,7 +190,7 @@ def test_dynamic_rir_close_to_gpurir():
         room_dim=room_dim,
         beta=beta,
         src_traj=src_path,
-        mic=mic,
+        mic=fixed_mic_position,
         nb_img=nb_img,
         tmax=tmax,
         fs=fs,
@@ -188,9 +204,10 @@ def test_dynamic_rir_close_to_gpurir():
     # (e.g., pyroomacoustics, rir-generator) enable/use HPF in typical workflows.
     torch_rirs = simulate_dynamic_rir(
         room=room,
-        src_traj=src_traj,
-        mic_traj=mic_traj,
+        src_traj=moving_source_traj_for_torchrir,
+        mic_traj=fixed_mic_traj_for_torchrir,
         max_order=0,
+        nb_img=tuple(nb_img),
         nsample=gpurir_rirs.shape[-1],
         directivity="omni",
         device="cuda",

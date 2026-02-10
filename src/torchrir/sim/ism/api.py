@@ -139,6 +139,7 @@ def simulate_dynamic_rir(
     src_traj: Tensor,
     mic_traj: Tensor,
     max_order: int | None,
+    nb_img: Optional[Tensor | Tuple[int, ...]] = None,
     nsample: Optional[int] = None,
     tmax: Optional[float] = None,
     directivity: str | tuple[str, str] | None = "omni",
@@ -179,7 +180,7 @@ def simulate_dynamic_rir(
 
     beta = _resolve_beta(room, room_size, device=device, dtype=dtype)
     beta = _validate_beta(beta, dim)
-    n_vec = _image_source_indices(max_order, dim, device=device, nb_img=None)
+    n_vec = _image_source_indices(max_order, dim, device=device, nb_img=nb_img)
     refl = _reflection_coefficients(n_vec, beta)
 
     src_pattern, mic_pattern = split_directivity(directivity)

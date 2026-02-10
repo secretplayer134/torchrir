@@ -124,6 +124,33 @@ def test_dynamic_accepts_2d_input():
     assert rirs.shape == (3, 1, 1, 256)
 
 
+def test_simulate_dynamic_rir_accepts_nb_img():
+    room = Room.shoebox(size=[5.0, 4.0, 3.0], fs=16000, beta=[0.9] * 6)
+    src_traj = torch.tensor(
+        [
+            [[1.0, 1.0, 1.0]],
+            [[1.2, 1.0, 1.0]],
+        ]
+    )
+    mic_traj = torch.tensor(
+        [
+            [[2.5, 1.0, 1.0]],
+            [[2.5, 1.0, 1.0]],
+        ]
+    )
+
+    rirs = simulate_dynamic_rir(
+        room=room,
+        src_traj=src_traj,
+        mic_traj=mic_traj,
+        max_order=0,
+        nb_img=(0, 0, 0),
+        nsample=256,
+    )
+
+    assert rirs.shape == (2, 1, 1, 256)
+
+
 def test_simulate_rir_hpf_changes_output_when_enabled():
     pytest.importorskip("scipy.signal")
 
