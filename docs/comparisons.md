@@ -15,7 +15,8 @@ This page summarizes implementation-level differences between TorchRIR and relat
 | 🖥️ CPU | ✅ | ❌ | ✅ | ✅ |
 | 🧮 CUDA | ✅ | ✅ | ❌ | ❌ |
 | 🍎 MPS | ✅ | ❌ | ❌ | ❌ |
-| 📊 Visualization | ✅ | ❌ | ✅ | ❌ |
+| 📊 Scene Plot | ✅ | ❌ | ✅ | ❌ |
+| 🎞️ Dynamic Scene GIF | ✅ | ❌ | 🟡 Manual animation script | ❌ |
 | 🗂️ Dataset Build | ✅ | ❌ | ✅ | ❌ |
 
 Legend:
@@ -23,7 +24,7 @@ Legend:
 - `🟡` manual setup
 - `❌` unavailable
 
-## Visualization and Dataset Build (Source-Level)
+## Visualization, Dynamic GIF, and Dataset Build (Source-Level)
 
 Marking criterion in this section:
 - Mark as `✅` when the functionality is provided as a library API/submodule (not only in examples).
@@ -34,31 +35,46 @@ Marking criterion in this section:
 
 - `torchrir` (`✅`):
   - Dedicated visualization submodule and public functions are provided.
-  - Source lines: `src/torchrir/viz/__init__.py:6-17`, `src/torchrir/viz/scene.py:14-23`, `src/torchrir/viz/scene.py:51-63`, `src/torchrir/viz/io.py:22-36`, `src/torchrir/viz/io.py:93-107`, `src/torchrir/viz/io.py:127-141`
+  - Source lines: [`src/torchrir/viz/__init__.py#L6-L17`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/__init__.py#L6-L17), [`src/torchrir/viz/scene.py#L14-L23`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/scene.py#L14-L23), [`src/torchrir/viz/scene.py#L51-L63`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/scene.py#L51-L63), [`src/torchrir/viz/io.py#L22-L36`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/io.py#L22-L36), [`src/torchrir/viz/io.py#L93-L107`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/io.py#L93-L107), [`src/torchrir/viz/io.py#L127-L141`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/io.py#L127-L141)
 - `gpuRIR` (`❌`):
   - Package exports simulation/control functions only; plotting appears in example scripts.
-  - Source lines: `gpuRIR/__init__.py:11`, `examples/example.py:8-9`, `examples/example.py:35-36`, `examples/polar_plots.py:3`, `examples/polar_plots.py:9-10`, `examples/polar_plots.py:66-75`
+  - Source lines: [`gpuRIR/__init__.py#L11`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L11), [`examples/example.py#L8-L9`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/example.py#L8-L9), [`examples/example.py#L35-L36`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/example.py#L35-L36), [`examples/polar_plots.py#L3`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/polar_plots.py#L3), [`examples/polar_plots.py#L9-L10`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/polar_plots.py#L9-L10), [`examples/polar_plots.py#L66-L75`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/polar_plots.py#L66-L75)
 - `pyroomacoustics` (`✅`):
   - Library-level plotting APIs exist (`Room.plot`, `Room.plot_rir`), with optional plotting helpers in other submodules.
-  - Source lines: `pyroomacoustics/room.py:1535-1547`, `pyroomacoustics/room.py:1827-1843`, `pyroomacoustics/__init__.py:123-134`
+  - Source lines: [`pyroomacoustics/room.py#L1535-L1547`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/room.py#L1535-L1547), [`pyroomacoustics/room.py#L1827-L1843`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/room.py#L1827-L1843), [`pyroomacoustics/__init__.py#L123-L134`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/__init__.py#L123-L134)
 - `rir-generator` (`❌`):
   - The package API is focused on RIR generation (`generate`) and does not include plotting APIs.
-  - Source lines: `src/rir_generator/__init__.py:36-50`
+  - Source lines: [`src/rir_generator/__init__.py#L36-L50`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/__init__.py#L36-L50)
+
+### Dynamic Scene GIF
+
+- `torchrir` (`✅`):
+  - Dedicated GIF APIs are provided for dynamic trajectories.
+  - Source lines: [`src/torchrir/viz/__init__.py#L3-L17`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/__init__.py#L3-L17), [`src/torchrir/viz/animation.py#L13-L29`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/animation.py#L13-L29), [`src/torchrir/viz/io.py#L127-L141`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/viz/io.py#L127-L141)
+- `gpuRIR` (`❌`):
+  - No GIF/animation API is exposed in the package interface.
+  - Source lines: [`gpuRIR/__init__.py#L11`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L11)
+- `pyroomacoustics` (`🟡`):
+  - Plotting APIs are provided, but no dedicated dynamic-scene GIF API; animation must be manually composed by users.
+  - Source lines: [`pyroomacoustics/room.py#L1535-L1547`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/room.py#L1535-L1547), [`pyroomacoustics/room.py#L1827-L1843`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/room.py#L1827-L1843), [`pyroomacoustics/__init__.py#L123-L134`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/__init__.py#L123-L134)
+- `rir-generator` (`❌`):
+  - No GIF/animation API is provided.
+  - Source lines: [`src/rir_generator/__init__.py#L36-L50`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/__init__.py#L36-L50)
 
 ### Dataset Build
 
 - `torchrir` (`✅`):
   - Dataset utilities are provided as library modules (`torchrir.datasets`) including dataset wrappers and source-loading utilities used by dataset generation workflows.
-  - Source lines: `src/torchrir/datasets/__init__.py:1-7`, `src/torchrir/datasets/__init__.py:19-42`, `src/torchrir/datasets/utils.py:30-37`
+  - Source lines: [`src/torchrir/datasets/__init__.py#L1-L7`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/datasets/__init__.py#L1-L7), [`src/torchrir/datasets/__init__.py#L19-L42`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/datasets/__init__.py#L19-L42), [`src/torchrir/datasets/utils.py#L30-L37`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/datasets/utils.py#L30-L37)
 - `gpuRIR` (`❌`):
   - No dataset submodule or dataset-building API is exposed.
-  - Source lines: `gpuRIR/__init__.py:11`
+  - Source lines: [`gpuRIR/__init__.py#L11`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L11)
 - `pyroomacoustics` (`✅`):
   - Dataset functionality is provided in-library via `pyroomacoustics.datasets` with corpus classes and `build_corpus` methods.
-  - Source lines: `pyroomacoustics/__init__.py:98-99`, `pyroomacoustics/__init__.py:123`, `pyroomacoustics/datasets/__init__.py:1-4`, `pyroomacoustics/datasets/cmu_arctic.py:114-117`, `pyroomacoustics/datasets/cmu_arctic.py:196-202`, `pyroomacoustics/datasets/google_speech_commands.py:72-73`, `pyroomacoustics/datasets/google_speech_commands.py:99-105`
+  - Source lines: [`pyroomacoustics/__init__.py#L98-L99`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/__init__.py#L98-L99), [`pyroomacoustics/__init__.py#L123`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/__init__.py#L123), [`pyroomacoustics/datasets/__init__.py#L1-L4`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/datasets/__init__.py#L1-L4), [`pyroomacoustics/datasets/cmu_arctic.py#L114-L117`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/datasets/cmu_arctic.py#L114-L117), [`pyroomacoustics/datasets/cmu_arctic.py#L196-L202`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/datasets/cmu_arctic.py#L196-L202), [`pyroomacoustics/datasets/google_speech_commands.py#L72-L73`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/datasets/google_speech_commands.py#L72-L73), [`pyroomacoustics/datasets/google_speech_commands.py#L99-L105`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/datasets/google_speech_commands.py#L99-L105)
 - `rir-generator` (`❌`):
   - No dataset module or dataset-building API is present.
-  - Source lines: `src/rir_generator/__init__.py:36-50`
+  - Source lines: [`src/rir_generator/__init__.py#L36-L50`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/__init__.py#L36-L50)
 
 ## ISM High-Pass Filter (HPF) Implementations
 
@@ -204,9 +220,9 @@ Practical note:
 - Even when parameters look identical, the included image-source set may not match exactly.
 
 Source lines:
-- `torchrir`: `src/torchrir/sim/ism/images.py:21-32`
-- `rir-generator`: `src/rir_generator/_cffi/rir_generator_core.cpp:177-207`
-- `gpuRIR`: `src/gpuRIR_cuda.cu:337-341`, `src/gpuRIR_cuda.cu:804-806`, `src/gpuRIR_cuda.cu:839`
+- `torchrir`: [`src/torchrir/sim/ism/images.py#L21-L32`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/sim/ism/images.py#L21-L32)
+- `rir-generator`: [`src/rir_generator/_cffi/rir_generator_core.cpp#L177-L207`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/_cffi/rir_generator_core.cpp#L177-L207)
+- `gpuRIR`: [`src/gpuRIR_cuda.cu#L337-L341`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L337-L341), [`src/gpuRIR_cuda.cu#L804-L806`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L804-L806), [`src/gpuRIR_cuda.cu#L839`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L839)
 
 ### 2) Fractional-delay interpolation kernel
 
@@ -218,9 +234,9 @@ Practical note:
 - Local waveform shape around sample positions can differ, causing mismatches in peak amplitude and fine temporal detail.
 
 Source lines:
-- `torchrir`: `src/torchrir/config.py:26-30`, `src/torchrir/sim/ism/accumulate.py:212-229`
-- `gpuRIR`: `src/gpuRIR_cuda.cu:629-637`, `src/gpuRIR_cuda.cu:644`, `src/gpuRIR_cuda.cu:676-696`, `gpuRIR/__init__.py:223-243`
-- `rir-generator`: `src/rir_generator/_cffi/rir_generator_core.cpp:144-145`, `src/rir_generator/_cffi/rir_generator_core.cpp:214-218`
+- `torchrir`: [`src/torchrir/config.py#L26-L30`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/config.py#L26-L30), [`src/torchrir/sim/ism/accumulate.py#L212-L229`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/sim/ism/accumulate.py#L212-L229)
+- `gpuRIR`: [`src/gpuRIR_cuda.cu#L629-L637`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L629-L637), [`src/gpuRIR_cuda.cu#L644`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L644), [`src/gpuRIR_cuda.cu#L676-L696`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L676-L696), [`gpuRIR/__init__.py#L223-L243`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L223-L243)
+- `rir-generator`: [`src/rir_generator/_cffi/rir_generator_core.cpp#L144-L145`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/_cffi/rir_generator_core.cpp#L144-L145), [`src/rir_generator/_cffi/rir_generator_core.cpp#L214-L218`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/_cffi/rir_generator_core.cpp#L214-L218)
 
 ### 3) HPF implementation and defaults
 
@@ -233,10 +249,10 @@ Practical note:
 - HPF presence and coefficient differences change waveform and energy, especially in low-frequency bands.
 
 Source lines:
-- `torchrir`: `src/torchrir/config.py:33-37`, `src/torchrir/sim/ism/hpf.py:23-37`, `src/torchrir/sim/ism/hpf.py:40-56`
-- `pyroomacoustics`: `pyroomacoustics/parameters.py:192-194`, `pyroomacoustics/room.py:2292-2295`, `pyroomacoustics/room.py:2356-2357`
-- `rir-generator`: `src/rir_generator/_cffi/rir_generator_core.cpp:135-139`, `src/rir_generator/_cffi/rir_generator_core.cpp:232-243`
-- `gpuRIR`: `gpuRIR/__init__.py:95-117` (no HPF parameter in the public `simulateRIR` API)
+- `torchrir`: [`src/torchrir/config.py#L33-L37`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/config.py#L33-L37), [`src/torchrir/sim/ism/hpf.py#L23-L37`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/sim/ism/hpf.py#L23-L37), [`src/torchrir/sim/ism/hpf.py#L40-L56`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/sim/ism/hpf.py#L40-L56)
+- `pyroomacoustics`: [`pyroomacoustics/parameters.py#L192-L194`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/parameters.py#L192-L194), [`pyroomacoustics/room.py#L2292-L2295`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/room.py#L2292-L2295), [`pyroomacoustics/room.py#L2356-L2357`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/room.py#L2356-L2357)
+- `rir-generator`: [`src/rir_generator/_cffi/rir_generator_core.cpp#L135-L139`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/_cffi/rir_generator_core.cpp#L135-L139), [`src/rir_generator/_cffi/rir_generator_core.cpp#L232-L243`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/_cffi/rir_generator_core.cpp#L232-L243)
+- `gpuRIR`: [`gpuRIR/__init__.py#L95-L117`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L95-L117) (no HPF parameter in the public `simulateRIR` API)
 
 ### 4) Late-reverb / diffuse-tail modeling
 
@@ -247,8 +263,8 @@ Practical note:
 - If `tmax` or tail-related settings are not aligned, late-part waveform error can grow significantly.
 
 Source lines:
-- `torchrir`: `src/torchrir/sim/ism/api.py:130-132`, `src/torchrir/sim/ism/diffuse.py:15-49`
-- `gpuRIR`: `gpuRIR/__init__.py:95-117`, `gpuRIR/__init__.py:166`, `src/gpuRIR_cuda.cu:831-835`, `src/gpuRIR_cuda.cu:852-865`, `src/gpuRIR_cuda.cu:872-883`, `src/gpuRIR_cuda.cu:445-461`
+- `torchrir`: [`src/torchrir/sim/ism/api.py#L130-L132`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/sim/ism/api.py#L130-L132), [`src/torchrir/sim/ism/diffuse.py#L15-L49`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/sim/ism/diffuse.py#L15-L49)
+- `gpuRIR`: [`gpuRIR/__init__.py#L95-L117`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L95-L117), [`gpuRIR/__init__.py#L166`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L166), [`src/gpuRIR_cuda.cu#L831-L835`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L831-L835), [`src/gpuRIR_cuda.cu#L852-L865`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L852-L865), [`src/gpuRIR_cuda.cu#L872-L883`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L872-L883), [`src/gpuRIR_cuda.cu#L445-L461`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/src/gpuRIR_cuda.cu#L445-L461)
 
 ### 5) Dynamic API assumptions
 
@@ -260,9 +276,9 @@ Practical note:
 - Without matching scene constraints, a dynamic comparison may reflect API assumptions rather than core algorithm differences.
 
 Source lines:
-- `torchrir`: `src/torchrir/sim/ism/api.py:136-150`
-- `gpuRIR`: `gpuRIR/__init__.py:95-175`, `gpuRIR/__init__.py:177-220`, `examples/simulate_trajectory.py:18-33`
-- `rir-generator`: `src/rir_generator/__init__.py:36-50` (static `generate(...)` API)
+- `torchrir`: [`src/torchrir/sim/ism/api.py#L136-L150`](https://github.com/taishi-n/torchrir/blob/main/src/torchrir/sim/ism/api.py#L136-L150)
+- `gpuRIR`: [`gpuRIR/__init__.py#L95-L175`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L95-L175), [`gpuRIR/__init__.py#L177-L220`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/gpuRIR/__init__.py#L177-L220), [`examples/simulate_trajectory.py#L18-L33`](https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/simulate_trajectory.py#L18-L33)
+- `rir-generator`: [`src/rir_generator/__init__.py#L36-L50`](https://github.com/audiolabs/rir-generator/blob/v0.3.0/src/rir_generator/__init__.py#L36-L50) (static `generate(...)` API)
 
 ### 6) API-path differences inside `pyroomacoustics`
 
@@ -273,5 +289,5 @@ Practical note:
 - Even within one library, amplitude convention can vary by API path, so fix the call path during comparisons.
 
 Source lines:
-- `pyroomacoustics` room ISM path (`1/r`): `pyroomacoustics/room.py:2317-2328` -> `pyroomacoustics/simulation/ism.py:187`
-- `pyroomacoustics` `build_rir_matrix` path (`1/(4πr)`): `pyroomacoustics/soundsource.py:326-328`
+- `pyroomacoustics` room ISM path (`1/r`): [`pyroomacoustics/room.py#L2317-L2328`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/room.py#L2317-L2328) -> [`pyroomacoustics/simulation/ism.py#L187`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/simulation/ism.py#L187)
+- `pyroomacoustics` `build_rir_matrix` path (`1/(4πr)`): [`pyroomacoustics/soundsource.py#L326-L328`](https://github.com/LCAV/pyroomacoustics/blob/v0.9.0/pyroomacoustics/soundsource.py#L326-L328)

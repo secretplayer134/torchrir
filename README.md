@@ -91,7 +91,8 @@ For detailed documentation, see the docs under `docs/` and Read the Docs.
 | 🖥️ CPU | ✅ | ❌ | ✅ | ✅ |
 | 🧮 CUDA | ✅ | ✅ | ❌ | ❌ |
 | 🍎 MPS | ✅ | ❌ | ❌ | ❌ |
-| 📊 Visualization | ✅ | ❌ | ✅ | ❌ |
+| 📊 Scene Plot | ✅ | ❌ | ✅ | ❌ |
+| 🎞️ Dynamic Scene GIF | ✅ | ❌ | 🟡 Manual animation script | ❌ |
 | 🗂️ Dataset Build | ✅ | ❌ | ✅ | ❌ |
 
 Legend:
