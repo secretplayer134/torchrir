@@ -148,3 +148,94 @@ a_i \propto \frac{g_i}{4\pi d_i}
 ### Practical implication for cross-library tests
 
 Even with matched geometry, `beta`, image limits, and interpolation settings, direct waveform-level comparisons can show an almost constant gain ratio near `4π` between `1/r` and `1/(4πr)` conventions. Normalize this global factor before enforcing strict amplitude-matching thresholds.
+
+## Known Differences
+
+In addition to the `4π` scaling gap, the following implementation differences affect cross-library RIR waveform comparisons.
+Line references below were checked against:
+- `torchrir` (this repository, current branch)
+- `gpuRIR` (`master` snapshot used for this comparison)
+- `pyroomacoustics` `0.9.0`
+- `rir-generator` `0.3.0`
+
+### 1) Image-source enumeration rules (`max_order` / `nb_img`)
+
+- `torchrir`: with `max_order`, it truncates by L1 norm (diamond); with `nb_img`, it enumerates a rectangular index range.
+- `rir-generator`: loops over a rectangular range, then filters by an order condition.
+- `gpuRIR`: maps `nb_img` directly to CUDA-side index expansion, so the enumeration path differs.
+
+Practical note:
+- Even when parameters look identical, the included image-source set may not match exactly.
+
+Source lines:
+- `torchrir`: `src/torchrir/sim/ism/images.py:21-32`
+- `rir-generator`: `src/rir_generator/_cffi/rir_generator_core.cpp:177-207`
+- `gpuRIR`: `src/gpuRIR_cuda.cu:337-341`, `src/gpuRIR_cuda.cu:804-806`, `src/gpuRIR_cuda.cu:839`
+
+### 2) Fractional-delay interpolation kernel
+
+- `torchrir`: Hann-windowed sinc (default tap length 81), with selectable LUT on/off.
+- `gpuRIR`: `Tw`-based implementation with separate LUT and mixed-precision controls.
+- `rir-generator`: a different LP interpolation implementation (with different `Tw` definition).
+
+Practical note:
+- Local waveform shape around sample positions can differ, causing mismatches in peak amplitude and fine temporal detail.
+
+Source lines:
+- `torchrir`: `src/torchrir/config.py:26-30`, `src/torchrir/sim/ism/accumulate.py:212-229`
+- `gpuRIR`: `src/gpuRIR_cuda.cu:629-637`, `src/gpuRIR_cuda.cu:644`, `src/gpuRIR_cuda.cu:676-696`, `gpuRIR/__init__.py:223-243`
+- `rir-generator`: `src/rir_generator/_cffi/rir_generator_core.cpp:144-145`, `src/rir_generator/_cffi/rir_generator_core.cpp:214-218`
+
+### 3) HPF implementation and defaults
+
+- `torchrir`: IIR HPF (enabled by default).
+- `pyroomacoustics`: also has HPF-enabled paths.
+- `rir-generator`: uses an Allen-Berkley style HPF.
+- `gpuRIR`: does not assume an equivalent built-in HPF path.
+
+Practical note:
+- HPF presence and coefficient differences change waveform and energy, especially in low-frequency bands.
+
+Source lines:
+- `torchrir`: `src/torchrir/config.py:33-37`, `src/torchrir/sim/ism/hpf.py:23-37`, `src/torchrir/sim/ism/hpf.py:40-56`
+- `pyroomacoustics`: `pyroomacoustics/parameters.py:192-194`, `pyroomacoustics/room.py:2292-2295`, `pyroomacoustics/room.py:2356-2357`
+- `rir-generator`: `src/rir_generator/_cffi/rir_generator_core.cpp:135-139`, `src/rir_generator/_cffi/rir_generator_core.cpp:232-243`
+- `gpuRIR`: `gpuRIR/__init__.py:95-117` (no HPF parameter in the public `simulateRIR` API)
+
+### 4) Late-reverb / diffuse-tail modeling
+
+- `torchrir`: can add a diffuse tail conditionally.
+- `gpuRIR`: also separates early reflections and diffuse components, but not with the same method.
+
+Practical note:
+- If `tmax` or tail-related settings are not aligned, late-part waveform error can grow significantly.
+
+Source lines:
+- `torchrir`: `src/torchrir/sim/ism/api.py:130-132`, `src/torchrir/sim/ism/diffuse.py:15-49`
+- `gpuRIR`: `gpuRIR/__init__.py:95-117`, `gpuRIR/__init__.py:166`, `src/gpuRIR_cuda.cu:831-835`, `src/gpuRIR_cuda.cu:852-865`, `src/gpuRIR_cuda.cu:872-883`, `src/gpuRIR_cuda.cu:445-461`
+
+### 5) Dynamic API assumptions
+
+- `torchrir`: explicitly models trajectories via `simulate_dynamic_rir(src_traj, mic_traj, ...)`.
+- `gpuRIR`: designed around static RIR generation plus trajectory convolution; for fair comparison, fixed mic + single moving source is the cleanest setup.
+- `rir-generator`: no dynamic trajectory API (static-oriented).
+
+Practical note:
+- Without matching scene constraints, a dynamic comparison may reflect API assumptions rather than core algorithm differences.
+
+Source lines:
+- `torchrir`: `src/torchrir/sim/ism/api.py:136-150`
+- `gpuRIR`: `gpuRIR/__init__.py:95-175`, `gpuRIR/__init__.py:177-220`, `examples/simulate_trajectory.py:18-33`
+- `rir-generator`: `src/rir_generator/__init__.py:36-50` (static `generate(...)` API)
+
+### 6) API-path differences inside `pyroomacoustics`
+
+- The main room ISM path typically uses `1/r`.
+- The `build_rir_matrix` path uses `1/(4πr)`.
+
+Practical note:
+- Even within one library, amplitude convention can vary by API path, so fix the call path during comparisons.
+
+Source lines:
+- `pyroomacoustics` room ISM path (`1/r`): `pyroomacoustics/room.py:2317-2328` -> `pyroomacoustics/simulation/ism.py:187`
+- `pyroomacoustics` `build_rir_matrix` path (`1/(4πr)`): `pyroomacoustics/soundsource.py:326-328`
