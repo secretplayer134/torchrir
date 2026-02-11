@@ -54,6 +54,7 @@ See the detailed overview: [Overview](overview.md).
 See runnable examples and command-line usage: [Examples](examples.md).
 
 ## Documentation pages
+- [Getting started](getting-started.md)
 - [Overview](overview.md)
 - [Examples](examples.md)
 - [Library Comparisons](comparisons.md)

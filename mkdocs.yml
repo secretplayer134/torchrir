@@ -17,6 +17,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Getting started: getting-started.md
   - Overview: overview.md
   - Examples: examples.md
   - Library Comparisons: comparisons.md
