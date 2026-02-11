@@ -22,20 +22,20 @@
 - Unified CLI example with JSON/YAML config and deterministic flag support.
 
 ## Module layout
-- {py:mod}`torchrir.sim`: Simulation engines and configuration for RIR generation.
-- {py:mod}`torchrir.signal`: Signal processing utilities for static and dynamic RIR convolution.
-- {py:mod}`torchrir.geometry`: Geometry helpers for arrays, trajectories, and sampling.
-- {py:mod}`torchrir.viz`: Visualization helpers for scenes and trajectories.
-- {py:mod}`torchrir.models`: Core data models for rooms, sources, microphones, scenes, and results.
-- {py:mod}`torchrir.io`: I/O helpers for audio files and metadata serialization
+- `torchrir.sim`: Simulation engines and configuration for RIR generation.
+- `torchrir.signal`: Signal processing utilities for static and dynamic RIR convolution.
+- `torchrir.geometry`: Geometry helpers for arrays, trajectories, and sampling.
+- `torchrir.viz`: Visualization helpers for scenes and trajectories.
+- `torchrir.models`: Core data models for rooms, sources, microphones, scenes, and results.
+- `torchrir.io`: I/O helpers for audio files and metadata serialization
   (wav-only `load_wav`/`save_wav`/`info_wav`, backend-format
   `load_audio`/`save_audio`/`info_audio`; explicit metadata-preserving
   audio I/O via `torchrir.io.AudioData` and `torchrir.io.load_audio_data`).
-- {py:mod}`torchrir.util`: General-purpose math, device, and tensor utilities for torchrir.
-- {py:mod}`torchrir.logging`: Logging configuration and helpers.
-- {py:mod}`torchrir.config`: Simulation configuration objects.
-- {py:mod}`torchrir.datasets`: Dataset helpers and collate utilities.
-- {py:mod}`torchrir.experimental`: Work-in-progress APIs (ray tracing, FDTD, template datasets).
+- `torchrir.util`: General-purpose math, device, and tensor utilities for torchrir.
+- `torchrir.logging`: Logging configuration and helpers.
+- `torchrir.config`: Simulation configuration objects.
+- `torchrir.datasets`: Dataset helpers and collate utilities.
+- `torchrir.experimental`: Work-in-progress APIs (ray tracing, FDTD, template datasets).
 
 ## Device selection
 - `device="cpu"`: CPU execution

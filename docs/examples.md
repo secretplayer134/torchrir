@@ -148,10 +148,9 @@ This script times static ISM and optional dynamic trajectory simulation.
 - `--gpu`: `cuda`, `mps`, or `auto`.
 - `--dynamic`: benchmark dynamic trajectory path as well.
 
-```{note}
-CUDA paths are validated in CI on CUDA runners. Runtime and numerical behavior
-still depend on your local CUDA/PyTorch environment.
-```
+!!! note
+    CUDA paths are validated in CI on CUDA runners. Runtime and numerical behavior
+    still depend on your local CUDA/PyTorch environment.
 
 ### Example runs
 
@@ -261,10 +260,9 @@ uv run python examples/build_dynamic_dataset.py \
 - `--download`: download the dataset if missing (default: off; auto-downloads when data is absent).
 - `--device`: cpu/cuda/mps/auto.
 
-```{note}
-`cuda` is available and validated in CI. Actual runtime behavior still depends
-on your local CUDA/PyTorch environment.
-```
+!!! note
+    `cuda` is available and validated in CI. Actual runtime behavior still depends
+    on your local CUDA/PyTorch environment.
 
 ### Implementation notes
 

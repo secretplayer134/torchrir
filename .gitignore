@@ -25,7 +25,8 @@ examples/outputs/
 *.zip
 *.npy
 
-# Docs build artifacts (Sphinx)
+# Docs build artifacts
 docs/_build/
 docs/_autosummary/
 docs/_generated/
+site/

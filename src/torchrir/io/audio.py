@@ -74,7 +74,9 @@ def load(path: Path) -> Tuple[torch.Tensor, int]:
         - For non-wav formats, use ``torchrir.io.audio.load_audio``.
 
     Example:
+        ```pycon
         >>> audio, fs = load(Path("datasets/cmu_arctic/.../arctic_a0001.wav"))
+        ```
     """
     suffix = path.suffix.lower()
     if suffix not in {".wav", ".wave"}:
@@ -139,7 +141,9 @@ def save(
     For non-wav formats, use ``torchrir.io.audio.save_audio``.
 
     Example:
+        ```pycon
         >>> save(Path("outputs/example.wav"), audio, sample_rate)
+        ```
     """
     suffix = path.suffix.lower()
     if suffix not in {".wav", ".wave"}:

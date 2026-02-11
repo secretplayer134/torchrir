@@ -18,7 +18,9 @@ class StaticScene:
     """Container for static scene simulation inputs.
 
     Example:
+        ```pycon
         >>> scene = StaticScene(room=room, sources=sources, mics=mics)
+        ```
     """
 
     room: Room
@@ -40,7 +42,9 @@ class DynamicScene:
     """Container for dynamic scene simulation inputs.
 
     Example:
+        ```pycon
         >>> scene = DynamicScene(room=room, sources=sources, mics=mics, src_traj=src_traj, mic_traj=mic_traj)
+        ```
     """
 
     room: Room

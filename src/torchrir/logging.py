@@ -12,8 +12,10 @@ class LoggingConfig:
     """Configuration for torchrir logging.
 
     Example:
+        ```pycon
         >>> config = LoggingConfig(level="INFO")
         >>> logger = setup_logging(config)
+        ```
     """
 
     level: str | int = "INFO"
@@ -41,8 +43,10 @@ def setup_logging(config: LoggingConfig, *, name: str = "torchrir") -> logging.L
     """Configure and return the base torchrir logger.
 
     Example:
+        ```pycon
         >>> logger = setup_logging(LoggingConfig(level="DEBUG"))
         >>> logger.info("ready")
+        ```
     """
     logger = logging.getLogger(name)
     level = config.resolve_level()
@@ -60,7 +64,9 @@ def get_logger(name: Optional[str] = None) -> logging.Logger:
     """Return a torchrir logger, namespaced under the torchrir root.
 
     Example:
+        ```pycon
         >>> logger = get_logger("examples.static")
+        ```
     """
     if not name:
         return logging.getLogger("torchrir")

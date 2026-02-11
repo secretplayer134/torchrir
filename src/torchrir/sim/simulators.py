@@ -27,7 +27,9 @@ class ISMSimulator:
     """ISM-based simulator using the current core implementation.
 
     Example:
+        ```pycon
         >>> result = ISMSimulator(max_order=6, tmax=0.3).simulate(scene, config)
+        ```
     """
 
     max_order: int

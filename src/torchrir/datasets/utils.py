@@ -16,8 +16,10 @@ def choose_speakers(
     """Select unique speakers for the requested number of sources.
 
     Example:
+        ```pycon
         >>> rng = random.Random(0)
         >>> speakers = choose_speakers(dataset, num_sources=2, rng=rng)
+        ```
     """
     speakers = dataset.list_speakers()
     if not speakers:
@@ -37,6 +39,7 @@ def load_dataset_sources(
     """Load and concatenate utterances for each speaker into fixed-length signals.
 
     Example:
+        ```pycon
         >>> from pathlib import Path
         >>> from torchrir.datasets import CmuArcticDataset
         >>> rng = random.Random(0)
@@ -47,6 +50,7 @@ def load_dataset_sources(
         ...     duration_s=10.0,
         ...     rng=rng,
         ... )
+        ```
     """
     dataset0 = dataset_factory(None)
     speakers = choose_speakers(dataset0, num_sources, rng)

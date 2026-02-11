@@ -1,5 +1,3 @@
 # Changelog
 
-```{include} ../CHANGELOG.md
-:heading-offset: 1
-```
+--8<-- "CHANGELOG.md:3:"

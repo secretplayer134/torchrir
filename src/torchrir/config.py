@@ -13,8 +13,10 @@ class SimulationConfig:
     """Configuration values for RIR simulation and convolution.
 
     Example:
+        ```pycon
         >>> cfg = SimulationConfig(max_order=6, tmax=0.3, device="auto")
         >>> cfg.validate()
+        ```
     """
 
     fs: Optional[float] = None
@@ -70,7 +72,9 @@ def default_config() -> SimulationConfig:
     """Return the default simulation configuration.
 
     Example:
+        ```pycon
         >>> cfg = default_config()
+        ```
     """
     cfg = SimulationConfig()
     cfg.validate()

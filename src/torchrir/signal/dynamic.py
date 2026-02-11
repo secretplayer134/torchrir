@@ -22,8 +22,10 @@ class DynamicConvolver:
     """Convolver for time-varying RIRs.
 
     Example:
+        ```pycon
         >>> convolver = DynamicConvolver(mode="trajectory")
         >>> y = convolver.convolve(signal, rirs)
+        ```
     """
 
     mode: str = "trajectory"
@@ -38,7 +40,9 @@ class DynamicConvolver:
         """Convolve signals with time-varying RIRs.
 
         Example:
+            ```pycon
             >>> y = DynamicConvolver(mode="hop", hop=1024).convolve(signal, rirs)
+            ```
         """
         if self.mode not in ("trajectory", "hop"):
             raise ValueError("mode must be 'trajectory' or 'hop'")

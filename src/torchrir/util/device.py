@@ -19,7 +19,9 @@ def resolve_device(
     Falls back to CPU when the requested backend is unavailable.
 
     Example:
+        ```pycon
         >>> device = resolve_device("auto")
+        ```
     """
     if device is None:
         return torch.device("cpu")
@@ -58,8 +60,10 @@ class DeviceSpec:
     """Resolve device + dtype defaults consistently.
 
     Example:
+        ```pycon
         >>> spec = DeviceSpec(device="auto", dtype=torch.float32)
         >>> device, dtype = spec.resolve(tensor)
+        ```
     """
 
     device: Optional[torch.device | str] = None

@@ -47,6 +47,7 @@ def animate_scene_gif(
         The output path.
 
     Example:
+        ```pycon
         >>> animate_scene_gif(
         ...     out_path=Path("outputs/scene.gif"),
         ...     room=[6.0, 4.0, 3.0],
@@ -57,6 +58,7 @@ def animate_scene_gif(
         ...     signal_len=16000,
         ...     fs=16000,
         ... )
+        ```
     """
     import matplotlib.pyplot as plt
     from matplotlib import animation

@@ -27,7 +27,9 @@ def estimate_beta_from_t60(
         uses snake_case naming for consistency.
 
     Example:
+        ```pycon
         >>> beta = estimate_beta_from_t60(torch.tensor([6.0, 4.0, 3.0]), t60=0.4)
+        ```
     """
     if t60 <= 0:
         raise ValueError("t60 must be positive")
@@ -63,7 +65,9 @@ def estimate_t60_from_beta(
     """Estimate T60 from reflection coefficients using Sabine's formula.
 
     Example:
+        ```pycon
         >>> t60 = estimate_t60_from_beta(torch.tensor([6.0, 4.0, 3.0]), beta=torch.full((6,), 0.9))
+        ```
     """
     size = as_tensor(size, device=device, dtype=dtype)
     size = ensure_dim(size)
@@ -110,7 +114,9 @@ def attenuation_db_to_time_sabine(att_db: float, t60: float) -> float:
         uses snake_case naming for consistency.
 
     Example:
+        ```pycon
         >>> t = attenuation_db_to_time_sabine(att_db=60.0, t60=0.4)
+        ```
     """
     if t60 <= 0:
         raise ValueError("t60 must be positive")
@@ -128,7 +134,9 @@ def estimate_image_counts_from_tmax(
         This function corresponds to gpuRIR's ``t2n`` helper, renamed for clarity.
 
     Example:
+        ```pycon
         >>> nb_img = estimate_image_counts_from_tmax(0.3, torch.tensor([6.0, 4.0, 3.0]))
+        ```
     """
     if tmax <= 0:
         raise ValueError("tmax must be positive")

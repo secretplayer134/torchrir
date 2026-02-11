@@ -8,10 +8,9 @@ with CPU/CUDA/MPS support, static and dynamic scenes, and dataset utilities.
 If you find bugs or have feature requests, please open an issue.
 Contributions are welcome.
 
-```{warning}
-TorchRIR is under active development and may contain bugs or breaking changes.
-Please validate results for your use case.
-```
+!!! warning
+    TorchRIR is under active development and may contain bugs or breaking changes.
+    Please validate results for your use case.
 
 ## Installation
 ```bash
@@ -34,12 +33,12 @@ pip install torchrir
 ### Supported datasets
 - CMU ARCTIC
 - LibriSpeech
-- Experimental template stub: {py:mod}`torchrir.experimental`
+- Experimental template stub: `torchrir.experimental`
 
 ### License
 TorchRIR is released under the Apache 2.0 license. See `LICENSE`.
 
-See the detailed overview: {doc}`overview`.
+See the detailed overview: [Overview](overview.md).
 
 ## Main features
 ### Static room acoustic simulation
@@ -54,25 +53,11 @@ See the detailed overview: {doc}`overview`.
 - Use `torchrir.datasets.load_dataset_sources` to build fixed-length sources.
 - Use dataset examples to generate per-scene WAV + metadata.
 
-See runnable examples and command-line usage: {doc}`examples`.
+See runnable examples and command-line usage: [Examples](examples.md).
 
 ## Documentation pages
-- {doc}`overview`
-- {doc}`examples`
-- {doc}`comparisons`
-- {doc}`changelog`
-- {doc}`api` (API documentation)
-- {ref}`genindex`
-
-```{toctree}
-:maxdepth: 2
-:caption: Contents
-:hidden:
-
-overview
-examples
-comparisons
-changelog
-API documentation <api>
-Index <genindex>
-```
+- [Overview](overview.md)
+- [Examples](examples.md)
+- [Library Comparisons](comparisons.md)
+- [Changelog](changelog.md)
+- [API documentation](api.md)
