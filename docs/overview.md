@@ -6,6 +6,7 @@
   with per-source/mic orientation handling.
 - Acoustic parameters via `beta` or `t60` (Sabine), optional diffuse tail via `tdiff`.
 - Dynamic convolution via `torchrir.signal.DynamicConvolver` (`trajectory` or `hop` modes).
+- Explicit scene models via `torchrir.models.StaticScene` and `torchrir.models.DynamicScene`.
 - CPU/CUDA/MPS execution with optional `torch.compile` acceleration for ISM accumulation
   (when enabled; MPS disables LUT).
 - Standard array geometries (linear, circular, polyhedron, binaural, Eigenmike)
@@ -14,6 +15,9 @@
 - Plotting utilities for static/dynamic scenes and GIF animation.
 - Metadata export helpers for time axis, DOA, array attributes, and trajectories (JSON-ready).
 - Explicit audio metadata I/O container via `torchrir.io.AudioData` (`load_audio_data` / `save_audio_data`).
+- Explicit wav/audio I/O split:
+  - wav-only: `torchrir.io.load_wav` / `save_wav` / `info_wav`
+  - backend-supported formats: `torchrir.io.load_audio` / `save_audio` / `info_audio`
 - Dataset examples can emit per-source reference audio (RIR-convolved premix) and record it in metadata.
 - Unified CLI example with JSON/YAML config and deterministic flag support.
 
@@ -24,9 +28,9 @@
 - {py:mod}`torchrir.viz`: Visualization helpers for scenes and trajectories.
 - {py:mod}`torchrir.models`: Core data models for rooms, sources, microphones, scenes, and results.
 - {py:mod}`torchrir.io`: I/O helpers for audio files and metadata serialization
-  (wav-only `load`/`save`/`info` with backend selection; non-wav via
-  `torchrir.io.audio.*`; explicit metadata-preserving audio I/O via
-  `torchrir.io.AudioData` and `torchrir.io.audio.load_audio_data`).
+  (wav-only `load_wav`/`save_wav`/`info_wav`, backend-format
+  `load_audio`/`save_audio`/`info_audio`; explicit metadata-preserving
+  audio I/O via `torchrir.io.AudioData` and `torchrir.io.load_audio_data`).
 - {py:mod}`torchrir.util`: General-purpose math, device, and tensor utilities for torchrir.
 - {py:mod}`torchrir.logging`: Logging configuration and helpers.
 - {py:mod}`torchrir.config`: Simulation configuration objects.
@@ -50,6 +54,8 @@ device, dtype = DeviceSpec(device="auto").resolve()
   raise `NotImplementedError`.
 - Experimental dataset stubs (`torchrir.experimental`) are not implemented and raise
   `NotImplementedError`.
+- `torchrir.models.Scene` is deprecated; use `StaticScene`/`DynamicScene`.
+- `torchrir.load`/`save` and `torchrir.io.load`/`save`/`info` are deprecated aliases.
 - `torchrir.sim.simulate_rir`/`torchrir.sim.simulate_dynamic_rir` require `max_order`
   (or `torchrir.config.SimulationConfig.max_order`) and either `nsample` or `tmax`.
 - Non-`omni` directivity requires orientation; mismatched shapes raise `ValueError`.
@@ -63,6 +69,7 @@ device, dtype = DeviceSpec(device="auto").resolve()
 - YAML configs require `PyYAML`; otherwise a `ModuleNotFoundError` is raised.
 - CMU ARCTIC downloads require network access.
 - GIF animation output requires Pillow (via matplotlib animation writer).
+- Dataclass models are frozen but hold mutable tensors (shallow immutability).
 
 
 ## Specification (current)

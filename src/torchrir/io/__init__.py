@@ -5,10 +5,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Tuple
+import warnings
 
 from torch import Tensor
 
-from .audio import AudioData, AudioInfo, _load_audio, _save_audio, info_audio
+from .audio import (
+    AudioData,
+    AudioInfo,
+    _load_audio,
+    _save_audio,
+    info_audio as _info_audio_file,
+    load_audio_data,
+    save_audio_data,
+)
 from .metadata import build_metadata, save_metadata_json
 from .outputs import save_scene_audio, save_scene_metadata
 
@@ -50,7 +59,7 @@ _AUDIO_BACKENDS = {
         name="soundfile",
         load=_soundfile_load,
         save=_soundfile_save,
-        info=info_audio,
+        info=_info_audio_file,
     )
 }
 _DEFAULT_AUDIO_BACKEND = "soundfile"
@@ -98,7 +107,7 @@ def _normalize_format(path: Path, fmt: str | None) -> str:
     return fmt
 
 
-def load(
+def load_wav(
     path: Path,
     *,
     backend: str | None = None,
@@ -120,7 +129,7 @@ def load(
     return backend_impl.load(path, "load")
 
 
-def save(
+def save_wav(
     path: Path,
     audio: Tensor,
     sample_rate: int,
@@ -147,7 +156,7 @@ def save(
     backend_impl.save(path, audio, sample_rate, normalize, peak, subtype)
 
 
-def info(
+def info_wav(
     path: Path,
     *,
     backend: str | None = None,
@@ -169,17 +178,125 @@ def info(
     return backend_impl.info(path)
 
 
+def load_audio(
+    path: Path,
+    *,
+    backend: str | None = None,
+) -> Tuple[Tensor, int]:
+    """Load an audio file in any format supported by the backend."""
+
+    backend_impl = _resolve_backend(backend)
+    return backend_impl.load(path, "load_audio")
+
+
+def save_audio(
+    path: Path,
+    audio: Tensor,
+    sample_rate: int,
+    *,
+    backend: str | None = None,
+    normalize: bool = True,
+    peak: float = 1.0,
+    subtype: str | None = None,
+) -> None:
+    """Save an audio file in any format supported by the backend."""
+
+    backend_impl = _resolve_backend(backend)
+    backend_impl.save(path, audio, sample_rate, normalize, peak, subtype)
+
+
+def info_audio(
+    path: Path,
+    *,
+    backend: str | None = None,
+) -> AudioInfo:
+    """Return metadata for an audio file in any backend-supported format."""
+
+    backend_impl = _resolve_backend(backend)
+    return backend_impl.info(path)
+
+
+def load(
+    path: Path,
+    *,
+    backend: str | None = None,
+    format: str | None = None,
+) -> Tuple[Tensor, int]:
+    """Deprecated wav-only loader. Use `load_wav` or `load_audio`."""
+
+    warnings.warn(
+        "torchrir.io.load is deprecated. Use torchrir.io.load_wav or torchrir.io.load_audio.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return load_wav(path, backend=backend, format=format)
+
+
+def save(
+    path: Path,
+    audio: Tensor,
+    sample_rate: int,
+    *,
+    backend: str | None = None,
+    format: str | None = None,
+    normalize: bool = True,
+    peak: float = 1.0,
+    subtype: str | None = None,
+) -> None:
+    """Deprecated wav-only saver. Use `save_wav` or `save_audio`."""
+
+    warnings.warn(
+        "torchrir.io.save is deprecated. Use torchrir.io.save_wav or torchrir.io.save_audio.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    save_wav(
+        path,
+        audio,
+        sample_rate,
+        backend=backend,
+        format=format,
+        normalize=normalize,
+        peak=peak,
+        subtype=subtype,
+    )
+
+
+def info(
+    path: Path,
+    *,
+    backend: str | None = None,
+    format: str | None = None,
+) -> AudioInfo:
+    """Deprecated wav-only metadata lookup. Use `info_wav` or `info_audio`."""
+
+    warnings.warn(
+        "torchrir.io.info is deprecated. Use torchrir.io.info_wav or torchrir.io.info_audio.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return info_wav(path, backend=backend, format=format)
+
+
 __all__ = [
     "AudioData",
     "AudioBackend",
     "build_metadata",
     "get_audio_backend",
     "info",
+    "info_audio",
+    "info_wav",
     "list_audio_backends",
     "load",
+    "load_audio",
+    "load_audio_data",
+    "load_wav",
     "save_scene_audio",
     "save_scene_metadata",
+    "save_audio",
+    "save_audio_data",
     "save_metadata_json",
     "save",
+    "save_wav",
     "set_audio_backend",
 ]

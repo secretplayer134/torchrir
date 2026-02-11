@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import warnings
 
 from ..datasets.base import BaseDataset, DatasetItem
 
@@ -24,6 +25,13 @@ class TemplateDataset(BaseDataset):
     This class is a placeholder to document the expected dataset API surface.
     It will be replaced with concrete dataset loaders in future releases.
     """
+
+    def __init__(self) -> None:
+        warnings.warn(
+            "TemplateDataset is experimental and not implemented.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     def __len__(self) -> int:
         raise NotImplementedError("TemplateDataset is not implemented yet")

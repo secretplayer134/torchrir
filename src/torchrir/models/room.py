@@ -94,17 +94,12 @@ class Source:
     orientation: Optional[Tensor] = None
 
     def __post_init__(self) -> None:
-        pos = as_tensor(self.positions)
-        if pos.ndim == 1:
-            pos = pos.unsqueeze(0)
-        if pos.ndim != 2 or pos.shape[1] not in (2, 3):
-            raise ValueError("source positions must have shape (n_src, 2) or (n_src, 3)")
-        if not torch.all(torch.isfinite(pos)):
-            raise ValueError("source positions must contain finite values")
+        pos = _normalize_entity_positions(self.positions, name="source")
         object.__setattr__(self, "positions", pos)
-        if self.orientation is not None:
-            ori = as_tensor(self.orientation)
-            _validate_orientation(ori, n_entities=pos.shape[0], dim=pos.shape[1], name="source")
+        ori = _normalize_entity_orientation(
+            self.orientation, n_entities=pos.shape[0], dim=pos.shape[1], name="source"
+        )
+        if ori is not None:
             object.__setattr__(self, "orientation", ori)
 
     def replace(self, **kwargs) -> "Source":
@@ -140,17 +135,12 @@ class MicrophoneArray:
     orientation: Optional[Tensor] = None
 
     def __post_init__(self) -> None:
-        pos = as_tensor(self.positions)
-        if pos.ndim == 1:
-            pos = pos.unsqueeze(0)
-        if pos.ndim != 2 or pos.shape[1] not in (2, 3):
-            raise ValueError("mic positions must have shape (n_mic, 2) or (n_mic, 3)")
-        if not torch.all(torch.isfinite(pos)):
-            raise ValueError("mic positions must contain finite values")
+        pos = _normalize_entity_positions(self.positions, name="mic")
         object.__setattr__(self, "positions", pos)
-        if self.orientation is not None:
-            ori = as_tensor(self.orientation)
-            _validate_orientation(ori, n_entities=pos.shape[0], dim=pos.shape[1], name="mic")
+        ori = _normalize_entity_orientation(
+            self.orientation, n_entities=pos.shape[0], dim=pos.shape[1], name="mic"
+        )
+        if ori is not None:
             object.__setattr__(self, "orientation", ori)
 
     def replace(self, **kwargs) -> "MicrophoneArray":
@@ -211,3 +201,28 @@ def _validate_orientation(
                 )
             return
         raise ValueError(f"{name} orientation for 3D has unsupported shape")
+
+
+def _normalize_entity_positions(positions: Tensor, *, name: str) -> Tensor:
+    pos = as_tensor(positions)
+    if pos.ndim == 1:
+        pos = pos.unsqueeze(0)
+    if pos.ndim != 2 or pos.shape[1] not in (2, 3):
+        raise ValueError(f"{name} positions must have shape (n, 2) or (n, 3)")
+    if not torch.all(torch.isfinite(pos)):
+        raise ValueError(f"{name} positions must contain finite values")
+    return pos
+
+
+def _normalize_entity_orientation(
+    orientation: Optional[Tensor],
+    *,
+    n_entities: int,
+    dim: int,
+    name: str,
+) -> Optional[Tensor]:
+    if orientation is None:
+        return None
+    ori = as_tensor(orientation)
+    _validate_orientation(ori, n_entities=n_entities, dim=dim, name=name)
+    return ori

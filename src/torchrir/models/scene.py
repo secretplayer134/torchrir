@@ -1,9 +1,10 @@
-"""Scene container for simulation inputs."""
+"""Scene containers for simulation inputs."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
+import warnings
 
 import torch
 from torch import Tensor
@@ -12,12 +13,64 @@ from .room import MicrophoneArray, Room, Source
 
 
 @dataclass(frozen=True)
-class Scene:
-    """Container for room, sources, microphones, and optional trajectories.
+class StaticScene:
+    """Container for static scene simulation inputs.
 
     Example:
-        >>> scene = Scene(room=room, sources=sources, mics=mics, src_traj=src_traj, mic_traj=mic_traj)
-        >>> scene.validate()
+        >>> scene = StaticScene(room=room, sources=sources, mics=mics)
+    """
+
+    room: Room
+    sources: Source
+    mics: MicrophoneArray
+
+    def __post_init__(self) -> None:
+        _validate_scene_entities(self.room, self.sources, self.mics)
+
+    def is_dynamic(self) -> bool:
+        return False
+
+    def validate(self) -> None:
+        _validate_scene_entities(self.room, self.sources, self.mics)
+
+
+@dataclass(frozen=True)
+class DynamicScene:
+    """Container for dynamic scene simulation inputs.
+
+    Example:
+        >>> scene = DynamicScene(room=room, sources=sources, mics=mics, src_traj=src_traj, mic_traj=mic_traj)
+    """
+
+    room: Room
+    sources: Source
+    mics: MicrophoneArray
+    src_traj: Tensor
+    mic_traj: Tensor
+
+    def __post_init__(self) -> None:
+        _validate_scene_entities(self.room, self.sources, self.mics)
+        dim = int(self.room.size.numel())
+        n_src = int(self.sources.positions.shape[0])
+        n_mic = int(self.mics.positions.shape[0])
+        t_src = _validate_traj(self.src_traj, n_src, dim, "src_traj")
+        t_mic = _validate_traj(self.mic_traj, n_mic, dim, "mic_traj")
+        if t_src != t_mic:
+            raise ValueError("src_traj and mic_traj must have matching time steps")
+
+    def is_dynamic(self) -> bool:
+        return True
+
+    def validate(self) -> None:
+        self.__post_init__()
+
+
+@dataclass(frozen=True)
+class Scene:
+    """Deprecated scene wrapper.
+
+    `Scene` is kept for backward compatibility. Prefer `StaticScene` and
+    `DynamicScene` to avoid ambiguous states.
     """
 
     room: Room
@@ -26,41 +79,79 @@ class Scene:
     src_traj: Optional[Tensor] = None
     mic_traj: Optional[Tensor] = None
 
+    def __post_init__(self) -> None:
+        warnings.warn(
+            "Scene is deprecated and will be removed in a future release. "
+            "Use StaticScene or DynamicScene.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        _validate_scene_entities(self.room, self.sources, self.mics)
+        has_src = self.src_traj is not None
+        has_mic = self.mic_traj is not None
+        if has_src != has_mic:
+            raise ValueError(
+                "Scene requires both src_traj and mic_traj for dynamic scenes. "
+                "Use StaticScene for static inputs."
+            )
+        if has_src and has_mic:
+            assert self.src_traj is not None
+            assert self.mic_traj is not None
+            dim = int(self.room.size.numel())
+            n_src = int(self.sources.positions.shape[0])
+            n_mic = int(self.mics.positions.shape[0])
+            t_src = _validate_traj(self.src_traj, n_src, dim, "src_traj")
+            t_mic = _validate_traj(self.mic_traj, n_mic, dim, "mic_traj")
+            if t_src != t_mic:
+                raise ValueError("src_traj and mic_traj must have matching time steps")
+
     def is_dynamic(self) -> bool:
-        """Return True if any trajectory is provided."""
-        return self.src_traj is not None or self.mic_traj is not None
+        return self.src_traj is not None and self.mic_traj is not None
 
     def validate(self) -> None:
-        """Validate scene consistency and trajectory shapes."""
-        if not isinstance(self.room, Room):
-            raise TypeError("room must be a Room instance")
-        if not isinstance(self.sources, Source):
-            raise TypeError("sources must be a Source instance")
-        if not isinstance(self.mics, MicrophoneArray):
-            raise TypeError("mics must be a MicrophoneArray instance")
+        self.__post_init__()
 
-        dim = self.room.size.numel()
-        n_src = self.sources.positions.shape[0]
-        n_mic = self.mics.positions.shape[0]
-        if self.sources.positions.shape[1] != dim:
-            raise ValueError("source position dimension must match room dimension")
-        if self.mics.positions.shape[1] != dim:
-            raise ValueError("mic position dimension must match room dimension")
+    def to_static_scene(self) -> StaticScene:
+        if self.is_dynamic():
+            raise ValueError("dynamic Scene cannot be converted to StaticScene")
+        return StaticScene(room=self.room, sources=self.sources, mics=self.mics)
 
-        t_src = _validate_traj(self.src_traj, n_src, dim, "src_traj")
-        t_mic = _validate_traj(self.mic_traj, n_mic, dim, "mic_traj")
-        if t_src is not None and t_mic is not None and t_src != t_mic:
-            raise ValueError("src_traj and mic_traj must have matching time steps")
+    def to_dynamic_scene(self) -> DynamicScene:
+        if not self.is_dynamic() or self.src_traj is None or self.mic_traj is None:
+            raise ValueError("static Scene cannot be converted to DynamicScene")
+        return DynamicScene(
+            room=self.room,
+            sources=self.sources,
+            mics=self.mics,
+            src_traj=self.src_traj,
+            mic_traj=self.mic_traj,
+        )
+
+
+SceneLike = StaticScene | DynamicScene | Scene
+
+
+def _validate_scene_entities(room: Room, sources: Source, mics: MicrophoneArray) -> None:
+    if not isinstance(room, Room):
+        raise TypeError("room must be a Room instance")
+    if not isinstance(sources, Source):
+        raise TypeError("sources must be a Source instance")
+    if not isinstance(mics, MicrophoneArray):
+        raise TypeError("mics must be a MicrophoneArray instance")
+
+    dim = int(room.size.numel())
+    if sources.positions.shape[1] != dim:
+        raise ValueError("source position dimension must match room dimension")
+    if mics.positions.shape[1] != dim:
+        raise ValueError("mic position dimension must match room dimension")
 
 
 def _validate_traj(
-    traj: Optional[Tensor],
+    traj: Tensor,
     count: int,
     dim: int,
     name: str,
-) -> Optional[int]:
-    if traj is None:
-        return None
+) -> int:
     if not torch.is_tensor(traj):
         raise TypeError(f"{name} must be a Tensor")
     if not torch.all(torch.isfinite(traj)):
@@ -70,9 +161,9 @@ def _validate_traj(
             raise ValueError(f"{name} must have shape (T, {count}, {dim})")
         if traj.shape[1] != dim:
             raise ValueError(f"{name} must have shape (T, {dim}) for single entity")
-        return traj.shape[0]
+        return int(traj.shape[0])
     if traj.ndim == 3:
         if traj.shape[1] != count or traj.shape[2] != dim:
             raise ValueError(f"{name} must have shape (T, {count}, {dim})")
-        return traj.shape[0]
+        return int(traj.shape[0])
     raise ValueError(f"{name} must have shape (T, {count}, {dim})")

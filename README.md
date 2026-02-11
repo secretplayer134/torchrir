@@ -54,10 +54,15 @@ Detailed notes and equations:
 
 ## Core API Overview
 - Geometry: `Room`, `Source`, `MicrophoneArray`
+- Scene models: `StaticScene`, `DynamicScene` (`Scene` is deprecated)
 - Static RIR: `torchrir.sim.simulate_rir`
 - Dynamic RIR: `torchrir.sim.simulate_dynamic_rir`
+- Simulator object: `torchrir.sim.ISMSimulator(max_order=..., tmax=... | nsample=...)`
 - Dynamic convolution: `torchrir.signal.DynamicConvolver`
-- Audio metadata I/O: `torchrir.io.AudioData`, `torchrir.io.audio.load_audio_data`
+- Audio I/O:
+  - wav-specific: `torchrir.io.load_wav`, `torchrir.io.save_wav`, `torchrir.io.info_wav`
+  - backend-supported formats: `torchrir.io.load_audio`, `torchrir.io.save_audio`, `torchrir.io.info_audio`
+  - metadata-preserving: `torchrir.io.AudioData`, `torchrir.io.load_audio_data`
 - Metadata export: `torchrir.io.build_metadata`, `torchrir.io.save_metadata_json`
 
 ## Module Layout (for contributors)
@@ -66,10 +71,16 @@ Detailed notes and equations:
 - `torchrir.geometry`: array geometries, sampling, trajectories
 - `torchrir.viz`: plotting and animation helpers
 - `torchrir.models`: room/scene/result data models
-- `torchrir.io`: audio I/O and metadata serialization (wav-only load/save/info with backend selection)
+- `torchrir.io`: audio I/O and metadata serialization (`*_wav` for wav-only, `*_audio` for backend-supported formats)
 - `torchrir.util`: shared math/tensor/device helpers
 - `torchrir.logging`: logging utilities
 - `torchrir.config`: simulation configuration objects
+
+## Design Notes
+- Scene typing is explicit: use `StaticScene` for fixed geometry and `DynamicScene` for trajectory-based simulation.
+- `Scene` remains as a backward-compatibility wrapper and emits `DeprecationWarning`.
+- Model dataclasses are frozen, but tensor payloads remain mutable (shallow immutability).
+- `torchrir.load` / `torchrir.save` and `torchrir.io.load` / `save` / `info` are deprecated compatibility aliases.
 
 ```python
 from torchrir import MicrophoneArray, Room, Source

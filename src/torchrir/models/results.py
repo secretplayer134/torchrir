@@ -7,7 +7,7 @@ from typing import Optional, TYPE_CHECKING
 
 from torch import Tensor
 
-from .scene import Scene
+from .scene import SceneLike
 
 if TYPE_CHECKING:
     from ..config import SimulationConfig
@@ -19,12 +19,12 @@ class RIRResult:
 
     Example:
         >>> from torchrir.sim import ISMSimulator
-        >>> result = ISMSimulator().simulate(scene, config)
+        >>> result = ISMSimulator(max_order=6, tmax=0.3).simulate(scene, config)
         >>> rirs = result.rirs
     """
 
     rirs: Tensor
-    scene: Scene
+    scene: SceneLike
     config: "SimulationConfig"
     timestamps: Optional[Tensor] = None
     seed: Optional[int] = None

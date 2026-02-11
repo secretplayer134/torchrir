@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import warnings
 
-from ..models import RIRResult, Scene
+from ..models import RIRResult, SceneLike
 from ..config import SimulationConfig
 
 
@@ -19,8 +20,15 @@ class RayTracingSimulator:
         reuse Scene/SimulationConfig for inputs and keep output shape parity.
     """
 
+    def __post_init__(self) -> None:
+        warnings.warn(
+            "RayTracingSimulator is experimental and not implemented.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
     def simulate(
-        self, scene: Scene, config: SimulationConfig | None = None
+        self, scene: SceneLike, config: SimulationConfig | None = None
     ) -> RIRResult:
         raise NotImplementedError("RayTracingSimulator is not implemented yet")
 
@@ -36,7 +44,14 @@ class FDTDSimulator:
         RIRResult with the same metadata contract as ISM.
     """
 
+    def __post_init__(self) -> None:
+        warnings.warn(
+            "FDTDSimulator is experimental and not implemented.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
     def simulate(
-        self, scene: Scene, config: SimulationConfig | None = None
+        self, scene: SceneLike, config: SimulationConfig | None = None
     ) -> RIRResult:
         raise NotImplementedError("FDTDSimulator is not implemented yet")
