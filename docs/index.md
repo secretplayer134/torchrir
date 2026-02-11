@@ -1,7 +1,5 @@
 # TorchRIR
 
-[![GitHub stars](https://img.shields.io/github/stars/taishi-n/torchrir?style=social)](https://github.com/taishi-n/torchrir)
-
 ## Summary
 TorchRIR is a PyTorch-based toolkit for room impulse response (RIR) simulation
 with CPU/CUDA/MPS support, static and dynamic scenes, and dataset utilities.
