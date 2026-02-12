@@ -1,10 +1,11 @@
 # Getting Started
 
-This page shows a minimal end-to-end workflow for the core TorchRIR APIs:
+This page demonstrates an end-to-end workflow with speech signals from CMU ARCTIC:
 
-1. Define room / source / microphone geometry.
-2. Simulate static or dynamic RIRs.
-3. Convolve dry signals with the generated RIRs.
+1. Download utterances for two speakers via `torchrir.datasets`.
+2. Build 10-second source signals by concatenating random utterances and clipping.
+3. Simulate static and dynamic RIRs under constrained source-array geometry.
+4. Save WAV outputs, layout plots, waveform/spectrogram plots, and a dynamic GIF.
 
 ## Install
 
@@ -12,163 +13,311 @@ This page shows a minimal end-to-end workflow for the core TorchRIR APIs:
 pip install torchrir
 ```
 
-## 1) Static RIR, Convolution, and Plot Export
+## 0) Common Setup (Dataset + Geometry Constraints)
 
 ```python
 from pathlib import Path
+import math
+import random
 
 import matplotlib.pyplot as plt
 import torch
 
 from torchrir import MicrophoneArray, Room, Source
-from torchrir.signal import convolve_rir
-from torchrir.sim import simulate_rir
-from torchrir.viz import plot_scene_static
+from torchrir.datasets import CmuArcticDataset, load_dataset_sources
+from torchrir.geometry import arrays
+from torchrir.io import save_wav
+from torchrir.signal import DynamicConvolver, convolve_rir
+from torchrir.sim import simulate_dynamic_rir, simulate_rir
+from torchrir.viz import animate_scene_gif, plot_scene_static
 
-fs = 16000
-out_dir = Path("outputs/getting_started")
+
+def save_waveform_spectrogram_pair(
+    *,
+    signal: torch.Tensor,
+    fs: int,
+    out_path: Path,
+    title: str,
+) -> None:
+    """Save one waveform+spectrogram pair plot with shared time axis (seconds)."""
+    x = signal.detach().cpu().float().numpy()
+    t = torch.arange(len(x), dtype=torch.float32).numpy() / float(fs)
+
+    fig, (ax_wave, ax_spec) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+    ax_wave.plot(t, x)
+    ax_wave.set_title(f"{title} - waveform")
+    ax_wave.set_ylabel("Amplitude")
+
+    ax_spec.specgram(x, Fs=fs, NFFT=1024, noverlap=768, cmap="magma")
+    ax_spec.set_title(f"{title} - spectrogram")
+    ax_spec.set_xlabel("Time [s]")
+    ax_spec.set_ylabel("Frequency [Hz]")
+
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+torch.manual_seed(42)
+rng = random.Random(42)
+out_dir = Path("docs/assets/getting-started")
 out_dir.mkdir(parents=True, exist_ok=True)
 
-room = Room.shoebox(size=[6.0, 4.0, 3.0], fs=fs, beta=[0.9] * 6)
-sources = Source.from_positions([[1.0, 1.5, 1.2]])
-mics = MicrophoneArray.from_positions([[2.5, 2.0, 1.2], [2.7, 2.0, 1.2]])
+# Download CMU ARCTIC data as needed and load two unique speakers.
+dataset_root = Path("datasets/cmu_arctic")
+signals, fs, source_info = load_dataset_sources(
+    dataset_factory=lambda spk: CmuArcticDataset(
+        dataset_root, speaker=spk or "bdl", download=True
+    ),
+    num_sources=2,
+    duration_s=10.0,  # concatenate random utterances until >=10 s, then clip to 10 s
+    rng=rng,
+)
+print("Selected speakers:", [speaker for speaker, _ in source_info])
+print("Loaded original signal shape:", tuple(signals.shape))  # (2, fs * 10)
 
-rirs = simulate_rir(
+room = Room.shoebox(size=[8.0, 6.0, 3.0], fs=fs, beta=[0.9] * 6)
+
+# Use a slightly jittered room-center position for the mic array to avoid
+# exact-center artifacts in symmetric setups.
+room_center = (room.size / 2.0).to(torch.float32)
+mic_jitter = torch.tensor(
+    [
+        rng.uniform(-0.03, 0.03),
+        rng.uniform(-0.03, 0.03),
+        rng.uniform(-0.01, 0.01),
+    ],
+    dtype=torch.float32,
+)
+mic_center = room_center + mic_jitter
+mic_pos = arrays.binaural_array(mic_center, offset=0.10)  # 20 cm spacing
+mics = MicrophoneArray.from_positions(mic_pos)
+
+# Place two sources at radius >= 2 m from array center with >= 30 deg separation.
+source_radius = 2.2
+source_angles_deg = [30.0, 150.0]
+src_pos = []
+for deg in source_angles_deg:
+    theta = math.radians(deg)
+    src_pos.append(
+        [
+            mic_center[0].item() + source_radius * math.cos(theta),
+            mic_center[1].item() + source_radius * math.sin(theta),
+            1.5,
+        ]
+    )
+src_pos = torch.tensor(src_pos, dtype=torch.float32)
+
+relative_xy = src_pos[:, :2] - mic_center[:2]
+radii = torch.linalg.norm(relative_xy, dim=1)
+angle_gap = abs(source_angles_deg[1] - source_angles_deg[0])
+assert bool(torch.all(radii >= 2.0))
+assert angle_gap >= 30.0
+
+sources_static = Source.from_positions(src_pos)
+```
+
+## 1) Static RIR + Convolution + Plots
+
+```python
+device = "auto"
+
+rirs_static = simulate_rir(
     room=room,
-    sources=sources,
+    sources=sources_static,
     mics=mics,
     max_order=6,
-    tmax=0.3,
+    tmax=0.4,
     directivity="omni",
-    device="auto",
+    device=device,
 )
-print("static RIR shape:", tuple(rirs.shape))  # (n_src, n_mic, rir_len)
+print("Static RIR shape:", tuple(rirs_static.shape))  # (n_src, n_mic, rir_len)
 
-dry = torch.randn(1, fs * 2, device=rirs.device, dtype=rirs.dtype)  # (n_src, n_samples)
-wet = convolve_rir(dry, rirs)
-print("convolved shape:", tuple(wet.shape))  # (n_mic, n_samples + rir_len - 1)
+original_static = signals.to(rirs_static.device, dtype=rirs_static.dtype)
+convolved_static = convolve_rir(original_static, rirs_static)
+print("Static convolved shape:", tuple(convolved_static.shape))  # (n_mic, n_samples + rir_len - 1)
 
-# Save source/mic layout plot (2D top view).
-room_top = room.size[:2]
-src_top = sources.positions[:, :2]
-mic_top = mics.positions[:, :2]
+# Save original and convolved audio.
+save_wav(out_dir / "static_original_src01.wav", signals[0], fs)
+save_wav(out_dir / "static_original_src02.wav", signals[1], fs)
+save_wav(out_dir / "static_convolved.wav", convolved_static, fs)
+
+# Save static layout image (no animation in static mode).
 ax = plot_scene_static(
-    room=room_top,
-    sources=src_top,
-    mics=mic_top,
-    title="Static scene (top view 2D)",
+    room=room.size[:2],
+    sources=sources_static.positions[:, :2],
+    mics=mics.positions[:, :2],
+    title="Static layout (top view)",
 )
 ax.figure.savefig(out_dir / "layout_static.png", dpi=150, bbox_inches="tight")
 plt.close(ax.figure)
 
-# Save waveform plot before/after convolution with a shared x-axis.
-fig, axes = plt.subplots(2, 1, figsize=(10, 5), sharex=True)
-axes[0].plot(dry[0].cpu().numpy())
-axes[0].set_title("Dry source signal")
-axes[0].set_xlabel("Sample")
-axes[0].set_ylabel("Amplitude")
-
-axes[1].plot(wet[0].cpu().numpy())  # first microphone output
-axes[1].set_title("Convolved signal (mic 1)")
-axes[1].set_xlabel("Sample")
-axes[1].set_ylabel("Amplitude")
-
-fig.tight_layout()
-fig.savefig(out_dir / "waveform_before_after.png", dpi=150, bbox_inches="tight")
-plt.close(fig)
+# Save waveform+spectrogram pair plots (seconds on the x-axis).
+save_waveform_spectrogram_pair(
+    signal=signals[0],
+    fs=fs,
+    out_path=out_dir / "static_original_src01_pair.png",
+    title="Static original source 1",
+)
+save_waveform_spectrogram_pair(
+    signal=signals[1],
+    fs=fs,
+    out_path=out_dir / "static_original_src02_pair.png",
+    title="Static original source 2",
+)
+save_waveform_spectrogram_pair(
+    signal=convolved_static[0],
+    fs=fs,
+    out_path=out_dir / "static_convolved_mic1_pair.png",
+    title="Static convolved mic 1",
+)
+save_waveform_spectrogram_pair(
+    signal=convolved_static[1],
+    fs=fs,
+    out_path=out_dir / "static_convolved_mic2_pair.png",
+    title="Static convolved mic 2",
+)
 ```
 
 Expected output files:
 
-- `outputs/getting_started/layout_static.png`
-- `outputs/getting_started/waveform_before_after.png`
+- `docs/assets/getting-started/static_original_src01.wav`
+- `docs/assets/getting-started/static_original_src02.wav`
+- `docs/assets/getting-started/static_convolved.wav`
+- `docs/assets/getting-started/layout_static.png`
+- `docs/assets/getting-started/static_original_src01_pair.png`
+- `docs/assets/getting-started/static_original_src02_pair.png`
+- `docs/assets/getting-started/static_convolved_mic1_pair.png`
+- `docs/assets/getting-started/static_convolved_mic2_pair.png`
 
-## 2) Dynamic RIR, Trajectory Convolution, and Plot Export
+Static preview (generated by running the code above):
+
+![Static layout](assets/getting-started/layout_static.png)
+![Static original source 1 pair plot](assets/getting-started/static_original_src01_pair.png)
+![Static original source 2 pair plot](assets/getting-started/static_original_src02_pair.png)
+![Static convolved mic 1 pair plot](assets/getting-started/static_convolved_mic1_pair.png)
+![Static convolved mic 2 pair plot](assets/getting-started/static_convolved_mic2_pair.png)
+
+Source 1 (original):
+<audio controls preload="none" src="assets/getting-started/static_original_src01.wav"></audio>
+
+Source 2 (original):
+<audio controls preload="none" src="assets/getting-started/static_original_src02.wav"></audio>
+
+Mic mixture (convolved):
+<audio controls preload="none" src="assets/getting-started/static_convolved.wav"></audio>
+
+## 2) Dynamic RIR + Trajectory Convolution + Animation
 
 ```python
-from pathlib import Path
+steps = 128
 
-import matplotlib.pyplot as plt
-import torch
+# Source 1 stays fixed; source 2 moves toward source 1.
+src0 = src_pos[0].unsqueeze(0).repeat(steps, 1)  # (T, 3)
+src1_start = src_pos[1]
+src1_end = src_pos[0] + torch.tensor([0.35, 0.10, 0.0], dtype=torch.float32)
+alpha = torch.linspace(0.0, 1.0, steps, dtype=torch.float32).unsqueeze(1)
+src1 = src1_start.unsqueeze(0) + alpha * (src1_end - src1_start).unsqueeze(0)
 
-from torchrir import Room
-from torchrir.signal import DynamicConvolver
-from torchrir.sim import simulate_dynamic_rir
-from torchrir.viz import plot_scene_dynamic
+src_traj = torch.stack([src0, src1], dim=1)  # (T, 2, 3)
+mic_traj = mics.positions.unsqueeze(0).repeat(steps, 1, 1)  # (T, n_mic, 3)
+sources_dynamic = Source.from_positions(src_traj[0])
 
-fs = 16000
-out_dir = Path("outputs/getting_started")
-out_dir.mkdir(parents=True, exist_ok=True)
+dist_start = torch.linalg.norm(src_traj[0, 1] - src_traj[0, 0]).item()
+dist_end = torch.linalg.norm(src_traj[-1, 1] - src_traj[-1, 0]).item()
+assert dist_end < dist_start
 
-room = Room.shoebox(size=[6.0, 4.0, 3.0], fs=fs, beta=[0.9] * 6)
-
-steps = 16
-# Same initial source/mic layout as the static example;
-# only the source moves in this dynamic example.
-src_start = torch.tensor([1.0, 1.5, 1.2], dtype=torch.float32)
-src_end = torch.tensor([3.0, 1.5, 1.2], dtype=torch.float32)
-alpha = torch.linspace(0.0, 1.0, steps, dtype=torch.float32).view(steps, 1, 1)
-src_traj = src_start.view(1, 1, 3) + alpha * (src_end - src_start).view(1, 1, 3)
-
-# Fixed microphones (same two-mic setup as the static example).
-mic_pos = torch.tensor([[2.5, 2.0, 1.2], [2.7, 2.0, 1.2]], dtype=torch.float32)
-mic_traj = mic_pos.unsqueeze(0).repeat(steps, 1, 1)
-
-dynamic_rirs = simulate_dynamic_rir(
+rirs_dynamic = simulate_dynamic_rir(
     room=room,
     src_traj=src_traj,
     mic_traj=mic_traj,
     max_order=6,
-    tmax=0.3,
+    tmax=0.4,
     directivity="omni",
-    device="auto",
+    device=device,
 )
-print("dynamic RIR shape:", tuple(dynamic_rirs.shape))  # (T, n_src, n_mic, rir_len)
+print("Dynamic RIR shape:", tuple(rirs_dynamic.shape))  # (T, n_src, n_mic, rir_len)
 
-dry = torch.randn(
-    1, fs * 2, device=dynamic_rirs.device, dtype=dynamic_rirs.dtype
-)  # (n_src, n_samples)
-wet = DynamicConvolver(mode="trajectory").convolve(dry, dynamic_rirs)
-print("dynamic convolved shape:", tuple(wet.shape))
+original_dynamic = signals.to(rirs_dynamic.device, dtype=rirs_dynamic.dtype)
+convolved_dynamic = DynamicConvolver(mode="trajectory").convolve(original_dynamic, rirs_dynamic)
+print("Dynamic convolved shape:", tuple(convolved_dynamic.shape))  # (n_mic, n_samples + rir_len - 1)
 
-# Save source/mic trajectory layout plot (2D top view).
-room_top = room.size[:2]
-src_traj_top = src_traj[:, :, :2]
-mic_traj_top = mic_traj[:, :, :2]
-ax = plot_scene_dynamic(
-    room=room_top,
-    src_traj=src_traj_top,
-    mic_traj=mic_traj_top,
-    title="Dynamic scene trajectories (top view 2D)",
+# Save original and convolved audio.
+save_wav(out_dir / "dynamic_original_src01.wav", signals[0], fs)
+save_wav(out_dir / "dynamic_original_src02.wav", signals[1], fs)
+save_wav(out_dir / "dynamic_convolved.wav", convolved_dynamic, fs)
+
+# Save dynamic layout animation.
+animate_scene_gif(
+    out_path=out_dir / "layout_dynamic.gif",
+    room=room.size,
+    sources=sources_dynamic,
+    mics=mics,
+    src_traj=src_traj,
+    mic_traj=mic_traj,
+    signal_len=signals.shape[1],
+    fs=fs,
 )
-ax.figure.savefig(out_dir / "layout_dynamic.png", dpi=150, bbox_inches="tight")
-plt.close(ax.figure)
 
-# Save waveform plot before/after convolution with a shared x-axis.
-fig, axes = plt.subplots(2, 1, figsize=(10, 5), sharex=True)
-axes[0].plot(dry[0].cpu().numpy())
-axes[0].set_title("Dry source signal")
-axes[0].set_xlabel("Sample")
-axes[0].set_ylabel("Amplitude")
-
-axes[1].plot(wet[0].cpu().numpy())  # first microphone output
-axes[1].set_title("Dynamic convolved signal (mic 1)")
-axes[1].set_xlabel("Sample")
-axes[1].set_ylabel("Amplitude")
-
-fig.tight_layout()
-fig.savefig(out_dir / "waveform_dynamic_before_after.png", dpi=150, bbox_inches="tight")
-plt.close(fig)
+# Save waveform+spectrogram pair plots (seconds on the x-axis).
+save_waveform_spectrogram_pair(
+    signal=signals[0],
+    fs=fs,
+    out_path=out_dir / "dynamic_original_src01_pair.png",
+    title="Dynamic original source 1",
+)
+save_waveform_spectrogram_pair(
+    signal=signals[1],
+    fs=fs,
+    out_path=out_dir / "dynamic_original_src02_pair.png",
+    title="Dynamic original source 2",
+)
+save_waveform_spectrogram_pair(
+    signal=convolved_dynamic[0],
+    fs=fs,
+    out_path=out_dir / "dynamic_convolved_mic1_pair.png",
+    title="Dynamic convolved mic 1",
+)
+save_waveform_spectrogram_pair(
+    signal=convolved_dynamic[1],
+    fs=fs,
+    out_path=out_dir / "dynamic_convolved_mic2_pair.png",
+    title="Dynamic convolved mic 2",
+)
 ```
 
 Expected output files:
 
-- `outputs/getting_started/layout_dynamic.png`
-- `outputs/getting_started/waveform_dynamic_before_after.png`
+- `docs/assets/getting-started/dynamic_original_src01.wav`
+- `docs/assets/getting-started/dynamic_original_src02.wav`
+- `docs/assets/getting-started/dynamic_convolved.wav`
+- `docs/assets/getting-started/layout_dynamic.gif`
+- `docs/assets/getting-started/dynamic_original_src01_pair.png`
+- `docs/assets/getting-started/dynamic_original_src02_pair.png`
+- `docs/assets/getting-started/dynamic_convolved_mic1_pair.png`
+- `docs/assets/getting-started/dynamic_convolved_mic2_pair.png`
+
+Dynamic preview (generated by running the code above):
+
+![Dynamic layout animation](assets/getting-started/layout_dynamic.gif)
+![Dynamic original source 1 pair plot](assets/getting-started/dynamic_original_src01_pair.png)
+![Dynamic original source 2 pair plot](assets/getting-started/dynamic_original_src02_pair.png)
+![Dynamic convolved mic 1 pair plot](assets/getting-started/dynamic_convolved_mic1_pair.png)
+![Dynamic convolved mic 2 pair plot](assets/getting-started/dynamic_convolved_mic2_pair.png)
+
+Source 1 (original):
+<audio controls preload="none" src="assets/getting-started/dynamic_original_src01.wav"></audio>
+
+Source 2 (original):
+<audio controls preload="none" src="assets/getting-started/dynamic_original_src02.wav"></audio>
+
+Mic mixture (convolved):
+<audio controls preload="none" src="assets/getting-started/dynamic_convolved.wav"></audio>
 
 !!! note
-    `device="auto"` may select `mps`/`cuda`, so the dry signal should be created on the same device as the RIR tensor.
-    On some PyTorch+MPS versions, FFT convolution may emit internal resize warnings; for a warning-free tutorial run, use `device="cpu"`.
+    The first dataset download can take time and requires network access.
+    GIF generation requires Pillow through Matplotlib's animation writer.
+    `device="auto"` may select `mps` or `cuda`; if you want a warning-free tutorial run, use `device="cpu"`.
 
 ## Next Steps
 
