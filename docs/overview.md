@@ -15,7 +15,7 @@
 - Plotting utilities for static/dynamic scenes and GIF animation.
 - Metadata export helpers for time axis, DOA, array attributes, and trajectories (JSON-ready).
 - Explicit audio metadata I/O container via `torchrir.io.AudioData` (`load_audio_data` / `save_audio_data`).
-- Explicit wav/audio I/O split:
+- Explicit split between WAV-only and backend-format audio I/O:
     - wav-only: `torchrir.io.load_wav` / `save_wav` / `info_wav`
     - backend-supported formats: `torchrir.io.load_audio` / `save_audio` / `info_audio`
 - Dataset examples can emit per-source reference audio (RIR-convolved premix) and record it in metadata.
@@ -31,7 +31,7 @@
   (wav-only `load_wav`/`save_wav`/`info_wav`, backend-format
   `load_audio`/`save_audio`/`info_audio`; explicit metadata-preserving
   audio I/O via `torchrir.io.AudioData` and `torchrir.io.load_audio_data`).
-- `torchrir.util`: General-purpose math, device, and tensor utilities for torchrir.
+- `torchrir.util`: General-purpose math, device, and tensor utilities for TorchRIR.
 - `torchrir.logging`: Logging configuration and helpers.
 - `torchrir.config`: Simulation configuration objects.
 - `torchrir.datasets`: Dataset helpers and collate utilities.
@@ -49,7 +49,7 @@ from torchrir.util import DeviceSpec
 device, dtype = DeviceSpec(device="auto").resolve()
 ```
 
-## Limitations and potential errors
+## Limitations and Failure Modes
 - Experimental ray tracing and FDTD simulators (`torchrir.experimental`) are placeholders and
   raise `NotImplementedError`.
 - Experimental dataset stubs (`torchrir.experimental`) are not implemented and raise
@@ -57,7 +57,7 @@ device, dtype = DeviceSpec(device="auto").resolve()
 - `torchrir.models.Scene` is deprecated; use `StaticScene`/`DynamicScene`.
 - `DynamicScene` normalizes tensor-like trajectories to tensors during initialization.
 - `Scene.validate()` does not re-emit deprecation warnings.
-- `ISMSimulator` raises `ValueError` when `max_order` or `tmax` conflicts with the provided `SimulationConfig`.
+- `ISMSimulator` raises `ValueError` if `max_order` or `tmax` conflicts with the provided `SimulationConfig`.
 - `torchrir.load`/`save` and `torchrir.io.load`/`save`/`info` are deprecated aliases.
 - `torchrir.sim.simulate_rir`/`torchrir.sim.simulate_dynamic_rir` require `max_order`
   (or `torchrir.config.SimulationConfig.max_order`) and either `nsample` or `tmax`.
@@ -70,8 +70,8 @@ device, dtype = DeviceSpec(device="auto").resolve()
 - HPF requires SciPy and currently applies filtering via CPU-domain processing, which can add host/device transfer overhead on CUDA/MPS runs.
 - Deterministic mode is best-effort; some backends may still be non-deterministic.
 - YAML configs require `PyYAML`; otherwise a `ModuleNotFoundError` is raised.
-- CMU ARCTIC downloads require network access.
-- GIF animation output requires Pillow (via matplotlib animation writer).
+- Downloading CMU ARCTIC requires network access.
+- GIF output requires Pillow (via Matplotlib's animation writer).
 - Dataclass models are frozen but hold mutable tensors (shallow immutability).
 
 

@@ -1,7 +1,7 @@
 # TorchRIR
 
-PyTorch-based room impulse response (RIR) simulation toolkit focused on a clean, modern API with GPU support.
-This project has been substantially assisted by AI using Codex.
+A PyTorch-based room impulse response (RIR) simulation toolkit with a clean API and GPU support.
+This project has been developed with substantial assistance from Codex.
 > [!WARNING]
 > TorchRIR is under active development and may contain bugs or breaking changes.
 > Please validate results for your use case.
@@ -30,8 +30,8 @@ pip install torchrir
 
 Legend: `✅` native support, `🟡` manual setup, `🚧` candidate (not yet implemented), `❌` unavailable
 
-Detailed notes and equations:
-[Read the Docs: Library Comparisons](https://torchrir.readthedocs.io/en/latest/comparisons.html)
+For detailed notes and equations, see
+[Read the Docs: Library Comparisons](https://torchrir.readthedocs.io/en/latest/comparisons.html).
 
 ## CUDA CI (GitHub Actions)
 - CUDA tests run in `.github/workflows/cuda-ci.yml` on a self-hosted runner with labels:
@@ -44,15 +44,15 @@ Detailed notes and equations:
   are skipped without failing the whole CUDA CI job.
 
 ## Examples
-- `examples/static.py`: fixed sources/mics with configurable mic count (default: binaural).  
+- `examples/static.py`: fixed sources and microphones with configurable mic count (default: binaural).  
   `uv run python examples/static.py --plot`
-- `examples/dynamic_src.py`: moving sources, fixed mics.  
+- `examples/dynamic_src.py`: moving sources, fixed microphones.  
   `uv run python examples/dynamic_src.py --plot`
-- `examples/dynamic_mic.py`: fixed sources, moving mics.  
+- `examples/dynamic_mic.py`: fixed sources, moving microphones.  
   `uv run python examples/dynamic_mic.py --plot`
-- `examples/cli.py`: unified CLI for static/dynamic scenes, JSON/YAML configs.  
+- `examples/cli.py`: unified CLI for static/dynamic scenes with JSON/YAML configs.  
   `uv run python examples/cli.py --mode static --plot`
-- `examples/build_dynamic_dataset.py`: small dynamic dataset generator (CMU ARCTIC / LibriSpeech; fixed room/mics, randomized source motion).  
+- `examples/build_dynamic_dataset.py`: small dynamic dataset generation script (CMU ARCTIC / LibriSpeech; fixed room/mics, randomized source motion).  
   `uv run python examples/build_dynamic_dataset.py --dataset cmu_arctic --num-scenes 4 --num-sources 2`
 - `examples/benchmark_device.py`: CPU/GPU benchmark for RIR simulation.  
   `uv run python examples/benchmark_device.py --dynamic`

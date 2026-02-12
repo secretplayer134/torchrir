@@ -1,9 +1,9 @@
 # TorchRIR
 
 ## Summary
-TorchRIR is a PyTorch-based toolkit for room impulse response (RIR) simulation
+TorchRIR is a PyTorch-based toolkit for room impulse response (RIR) simulation,
 with CPU/CUDA/MPS support, static and dynamic scenes, and dataset utilities.
-If you find bugs or have feature requests, please open an issue.
+If you find a bug or have a feature request, please open an issue.
 Contributions are welcome.
 
 !!! warning
@@ -31,16 +31,16 @@ pip install torchrir
 ### Supported datasets
 - CMU ARCTIC
 - LibriSpeech
-- Experimental template stub: `torchrir.experimental`
+- Experimental template dataset stub under `torchrir.experimental`
 - Dataset attribution and redistribution notes:
   [THIRD_PARTY_DATASETS.md](https://github.com/taishi-n/torchrir/blob/main/THIRD_PARTY_DATASETS.md)
 
 ### License
-TorchRIR is released under the Apache 2.0 license. See `LICENSE`.
+TorchRIR is released under the Apache License 2.0. See `LICENSE`.
 
 See the detailed overview: [Overview](overview.md).
 
-## Main features
+## Core Workflows
 ### Static room acoustic simulation
 - Compute static RIRs with `torchrir.sim.simulate_rir`.
 - Convolve dry signals with `torchrir.signal.convolve_rir`.
@@ -49,13 +49,13 @@ See the detailed overview: [Overview](overview.md).
 - Compute time-varying RIRs with `torchrir.sim.simulate_dynamic_rir`.
 - Convolve with `torchrir.signal.DynamicConvolver(mode="trajectory")`.
 
-### Building dataset
+### Dataset generation
 - Use `torchrir.datasets.load_dataset_sources` to build fixed-length sources.
-- Use dataset examples to generate per-scene WAV + metadata.
+- Use the dataset example scripts to generate per-scene WAV files and metadata.
 
 See runnable examples and command-line usage: [Examples](examples.md).
 
-## Documentation pages
+## Documentation Pages
 - [Getting started](getting-started.md)
 - [Overview](overview.md)
 - [Examples](examples.md)

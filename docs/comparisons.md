@@ -1,6 +1,6 @@
 # Library Comparisons
 
-This page summarizes implementation-level differences between TorchRIR and related libraries in this scope:
+This page summarizes implementation-level differences between TorchRIR and related libraries within this comparison scope:
 
 - `torchrir`
 - `gpuRIR`
@@ -33,11 +33,11 @@ Legend:
 Notes:
 
 - `Signal Processing` includes beamforming, DOA, BSS, adaptive filtering, STFT, and denoising.
-- In `torchrir`, this row is comparison-only and marked as scope out.
+- For `torchrir`, this row is included for comparison only and is marked as scope out.
 
 ## Visualization, Dynamic GIF, and Dataset Build (Source-Level)
 
-Marking criterion in this section:
+Scoring criteria in this section:
 
 - Mark as `✅` when the functionality is provided as a library API/submodule (not only in examples).
 - Mark as `🟡` when possible only via manual composition without a dedicated library feature surface.

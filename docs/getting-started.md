@@ -1,6 +1,6 @@
 # Getting Started
 
-This page shows the minimum workflow for the core TorchRIR APIs:
+This page shows a minimal end-to-end workflow for the core TorchRIR APIs:
 
 1. Define room / source / microphone geometry.
 2. Simulate static or dynamic RIRs.
@@ -12,7 +12,7 @@ This page shows the minimum workflow for the core TorchRIR APIs:
 pip install torchrir
 ```
 
-## 1) Static RIR + Convolution + Plot Saving
+## 1) Static RIR, Convolution, and Plot Export
 
 ```python
 from pathlib import Path
@@ -78,12 +78,12 @@ fig.savefig(out_dir / "waveform_before_after.png", dpi=150, bbox_inches="tight")
 plt.close(fig)
 ```
 
-Expected plot outputs:
+Expected output files:
 
 - `outputs/getting_started/layout_static.png`
 - `outputs/getting_started/waveform_before_after.png`
 
-## 2) Dynamic RIR + Trajectory Convolution + Plot Saving
+## 2) Dynamic RIR, Trajectory Convolution, and Plot Export
 
 ```python
 from pathlib import Path
@@ -161,14 +161,14 @@ fig.savefig(out_dir / "waveform_dynamic_before_after.png", dpi=150, bbox_inches=
 plt.close(fig)
 ```
 
-Expected plot outputs:
+Expected output files:
 
 - `outputs/getting_started/layout_dynamic.png`
 - `outputs/getting_started/waveform_dynamic_before_after.png`
 
 !!! note
     `device="auto"` may select `mps`/`cuda`, so the dry signal should be created on the same device as the RIR tensor.
-    On some PyTorch+MPS versions, FFT convolution can emit internal resize warnings; if you want a warning-free tutorial run, use `device="cpu"`.
+    On some PyTorch+MPS versions, FFT convolution may emit internal resize warnings; for a warning-free tutorial run, use `device="cpu"`.
 
 ## Next Steps
 

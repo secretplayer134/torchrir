@@ -1,6 +1,6 @@
 # Examples
 
-## Static CMU ARCTIC (fixed sources + fixed mic)
+## Static CMU ARCTIC (fixed sources, fixed microphones)
 
 This example mixes multiple CMU ARCTIC utterances using a static ISM RIR and
 produces a multi-microphone output (default: binaural).
@@ -42,12 +42,12 @@ Expected outputs:
 - `static_metadata.json`
 - `ATTRIBUTION.txt`
 
-## Dynamic CMU ARCTIC (moving sources, fixed mic)
+## Dynamic CMU ARCTIC (moving sources, fixed microphones)
 
-This example generates moving source trajectories and convolves with dynamic
+This example generates moving source trajectories and convolves source signals with dynamic
 RIRs (trajectory mode).
 
-Plotting utilities are provided by `save_scene_plots` and `save_scene_gifs`.
+The script uses `save_scene_plots` and `save_scene_gifs` for visualization output.
 
 ### Key arguments
 
@@ -82,9 +82,9 @@ Expected outputs:
 - `dynamic_src_metadata.json`
 - `ATTRIBUTION.txt`
 
-## Dynamic CMU ARCTIC (fixed sources, moving mic)
+## Dynamic CMU ARCTIC (fixed sources, moving microphones)
 
-This example keeps sources fixed and moves the mic array along a linear path.
+This example keeps sources fixed and moves the microphone array along a linear path.
 
 ### Key arguments
 
@@ -120,7 +120,7 @@ Expected outputs:
 
 ## Unified CLI (static/dynamic)
 
-The unified CLI wraps the three scenarios above and supports JSON/YAML configs.
+The unified CLI wraps the three scenarios above and supports JSON/YAML configuration files.
 
 ### Key arguments
 
@@ -156,7 +156,7 @@ Expected outputs:
 
 ## Benchmark (CPU vs GPU)
 
-This script times static ISM and optional dynamic trajectory simulation.
+This script benchmarks static ISM and, optionally, dynamic trajectory simulation.
 
 ### Key arguments
 
@@ -268,7 +268,7 @@ uv run python examples/build_dynamic_dataset.py \
 - `--num-sources`: number of sources per scene.
 - `--num-moving-sources`: number of sources that move (others stay fixed).
 - `--num-mics`: number of microphones in the fixed array.
-- `--duration`: length (seconds) of each source mixture.
+- `--duration`: target duration (seconds) of each source signal.
 - `--steps`: number of RIR steps (trajectory resolution).
 - `--order`: ISM reflection order.
 - `--tmax`: RIR length in seconds.
@@ -276,7 +276,7 @@ uv run python examples/build_dynamic_dataset.py \
 - `--dataset-dir`: dataset root path.
 - `--out-dir`: output directory for per-scene WAV/JSON/plots/GIFs.
 - `--plot`: enable plotting + GIFs (default: off).
-- `--download`: download the dataset if missing (default: off; auto-downloads when data is absent).
+- `--download`: explicitly request dataset download when files are missing (the script also retries with download enabled after a missing-data error).
 - `--device`: cpu/cuda/mps/auto.
 
 !!! note
