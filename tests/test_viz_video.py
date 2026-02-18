@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import cast
 
 import pytest
 import torch
@@ -384,7 +385,7 @@ def test_animate_scene_mp4_uses_hd_canvas(
     assert viz_animation._VIDEO_FONT_SIZE_PT == 24.0
     assert calls["figsize"] == viz_animation._MP4_FIGSIZE_INCHES
     assert calls["writer_fps"] == 12
-    saved_path, writer, dpi = calls["anim_save"]
+    saved_path, writer, dpi = cast(tuple[Path, object, int], calls["anim_save"])
     assert saved_path == out_path
     assert writer.__class__.__name__ == "_DummyWriter"
     assert dpi == viz_animation._MP4_DPI

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pytest
@@ -151,8 +152,7 @@ def test_dynamic_cmu_arctic_builder_calls_video_save(
     assert call["save_3d"] is False
     assert call["mp4_fps"] == pytest.approx(12.0)
     assert call["mux_audio"] is False
-    annotation_lines = call["annotation_lines"]
-    assert isinstance(annotation_lines, list)
+    annotation_lines = cast(list[str], call["annotation_lines"])
     assert len(annotation_lines) == 3
     assert annotation_lines[0] == "scene:scene_0000"
     assert annotation_lines[1].startswith("move:")
@@ -198,16 +198,14 @@ def test_dynamic_cmu_arctic_builder_defaults_enable_annotations(
     assert image_calls[0]["src_traj"] is not None
     assert image_calls[0]["mic_traj"] is not None
     assert image_calls[0]["save_3d"] is True
-    image_annotation_lines = image_calls[0]["annotation_lines"]
-    assert isinstance(image_annotation_lines, list)
+    image_annotation_lines = cast(list[str], image_calls[0]["annotation_lines"])
     assert len(image_annotation_lines) == 3
     assert image_annotation_lines[0] == "scene:scene_0000"
     assert image_annotation_lines[1].startswith("move:")
     assert image_annotation_lines[2].startswith("speed:")
     assert len(video_calls) == 1
     assert video_calls[0]["annotate_sources"] is True
-    video_annotation_lines = video_calls[0]["annotation_lines"]
-    assert isinstance(video_annotation_lines, list)
+    video_annotation_lines = cast(list[str], video_calls[0]["annotation_lines"])
     assert len(video_annotation_lines) == 3
     assert video_annotation_lines[0] == "scene:scene_0000"
     assert video_annotation_lines[1].startswith("move:")
